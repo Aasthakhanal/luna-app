@@ -5,23 +5,23 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --color-primary: #ff6f76;       
-  --color-primary-light: #fff1f1; 
-  --color-primary-dark: #d5596f; 
+  --color-primary: #ff6f76;
+  --color-primary-light: #fff1f1;
+  --color-primary-dark: #d5596f;
 
-  --color-secondary: #fca9ad;  
+  --color-secondary: #fca9ad;
   --color-secondary-dark: #fb8c91;
 
-  --color-accent: #fa6f76;      
-  --color-accent-dark: #8a2e32;  
+  --color-accent: #fa6f76;
+  --color-accent-dark: #8a2e32;
 
-  --color-neutral: #6B5B6B;       /* Muted Purple Gray */
-  --color-neutral-light: #A998A9; /* Soft Gray Lavender */
-  --color-neutral-dark: #453B45;
+  --color-neutral: #6b5b6b; /* Muted Purple Gray */
+  --color-neutral-light: #a998a9; /* Soft Gray Lavender */
+  --color-neutral-dark: #453b45;
   --background: var(--color-secondary); /* #FEFAE0 */
   --foreground: var(--color-neutral-dark); /* #4A5536 */
   --card: var(--color-secondary); /* #FEFAE0 */
-  --cardbg:var(--color-secondary-dark);
+  --cardbg: var(--color-secondary-dark);
   --card-foreground: var(--color-neutral-dark); /* #4A5536 */
   --popover: var(--color-secondary); /* #FEFAE0 */
   --popover-foreground: var(--color-neutral-dark); /* #4A5536 */
@@ -52,6 +52,17 @@
   --sidebar-accent-foreground: var(--color-neutral-dark); /* #4A5536 */
   --sidebar-border: var(--color-accent-dark); /* #E0DCC5 */
   --sidebar-ring: var(--color-primary-light); /* #9AA86A */
+  --period: <color>;
+  --period-foreground: <color>;
+  --prediction: <color>;
+  --prediction-foreground: <color>;
+  --ovulation: <color>;
+  --ovulation-foreground: <color>;
+  --fertile: <color>;
+  --fertile-foreground: <color>;
+  --color-soft-pink: #FADADD;
+  --color-peach: #edeae5;
+  --color-lavender: #ececfa;
 }
 
 .dark {
@@ -139,4 +150,19 @@
 
 button {
   @apply cursor-pointer;
+}
+.fc .fc-button {
+  @apply bg-gray-500 h-8 w-12  text-white text-sm text-shadow-md rounded  transition-all;
+}
+
+.fc .fc-button:hover {
+  @apply bg-gray-800;
+}
+
+.fc .fc-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.fc .fc-button-primary {
+  @apply border-none shadow-sm ;
 }
