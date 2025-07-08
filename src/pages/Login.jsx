@@ -20,7 +20,6 @@ import { setCredentials } from "../features/auth/authSlice";
 import { jwtDecode } from "jwt-decode";
 import logo from "../assets/lunaa.png";
 
-
 const loginFormSchema = z.object({
   username: z.string().email(),
   password: z.string(),
@@ -43,6 +42,7 @@ const Login = () => {
     try {
       const response = await login(values).unwrap();
       const decodedResponse = response ? jwtDecode(response?.token) : null;
+      console.log(decodedResponse)
       const userId = decodedResponse?.user_id;
       dispatch(setCredentials({ user: userId, token: response?.token }));
       navigate("/dashboard");

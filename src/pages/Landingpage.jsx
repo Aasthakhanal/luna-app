@@ -4,10 +4,10 @@ import Header from "../components/Header";
 import logo from "../assets/lunaa.png";
 import heroImg from "../assets/hero.png";
 
-const Landing = () => {
+const Landing = ({ isAuthenticated }) => {
   return (
     <div className="min-h-screen bg-white text-foreground scroll-smooth">
-      <Header />
+      <Header isAuthenticated={isAuthenticated} />
 
       {/* Hero Section */}
       <section className="pt-40 pb-16 md:pt-32 md:pb-24 bg-primary-light">

@@ -4,13 +4,19 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useState } from "react";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
-import { useSelector } from "react-redux";
+import { Dashboard } from "./pages/Dashboard";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import Landingpage from "./pages/Landingpage";
+import Insights from "./pages/Insights";
+import Chatbot from "./pages/Chatbot";
+import Settings from "./pages/Settings";
+import AppLayout from "./Layouts/AppLayout";
+import FullCalendarPage from "./pages/FullCalendarPage";
+import { Toaster } from "sonner";
 
 const ProtectedRoutes = () => {
   const token = Cookies.get("authToken");
@@ -38,26 +44,45 @@ const ProtectedRoutes = () => {
 };
 
 function App() {
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const token = Cookies.get("authToken");
+  const isAuthenticated = !!token;
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landingpage />}></Route>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
-        />
-        <Route
-          path="/signup"
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />}
-        />
+    <>
+      <Toaster richColors position="top-right" />
 
-        {/* Projected Routes */}
-        <Route path="/" element={<ProtectedRoutes />}>
-          <Route path="/dashboard" element={<Dashboard />}></Route>
-        </Route>
-      </Routes>
-    </Router>
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={<Landingpage isAuthenticated={isAuthenticated} />}
+          ></Route>
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
+          />
+          <Route
+            path="/signup"
+            element={
+              isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />
+            }
+          />
+
+          {/* Projected Routes */}
+          <Route path="/" element={<ProtectedRoutes />}>
+            <Route
+              path="dashboard"
+              element={
+                <Dashboard user={isAuthenticated ? jwtDecode(token) : null} />
+              }
+            />
+            <Route path="calendar" element={<FullCalendarPage />} />
+            <Route path="insights" element={<Insights />} />
+            <Route path="chatbot" element={<Chatbot />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+      </Router>
+    </>
   );
 }
 export default App;

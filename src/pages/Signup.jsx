@@ -32,7 +32,7 @@ const signupFormSchema = z
         "Password must have one uppercase letter & one number"
       ),
     confirm_password: z.string(),
-    role: z.enum(["USER", "ADMIN"]),
+    role: z.enum(["USER", "ADMIN"]).default("USER"),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "Passwords do not match",
@@ -42,6 +42,9 @@ const signupFormSchema = z
 const Signup = () => {
   const signupFormComponent = useForm({
     resolver: zodResolver(signupFormSchema),
+    defaultValues: {
+      role: "USER",
+    },
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -62,7 +65,6 @@ const Signup = () => {
         phone_number: values.phone_number,
         password: values.password,
         role: values.role,
-        role_id: values.role === "ADMIN" ? 1 : 2,
       }).unwrap();
       const decodedResponse = response ? jwtDecode(response?.token) : null;
       const userId = decodedResponse?.user_id;
@@ -137,14 +139,20 @@ const Signup = () => {
                     <Input
                       {...field}
                       placeholder="+9779XXXXXXXX"
-                      className="w-full border border-gray-300 rounded-md p-2"
                       value={field?.value ?? ""}
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
-          
+            <FormField
+              control={signupFormComponent.control}
+              name="role"
+              render={({ field }) => (
+                <input type="hidden" value="USER" {...field} />
+              )}
+            />
+
             <FormField
               control={signupFormComponent.control}
               name="password"
