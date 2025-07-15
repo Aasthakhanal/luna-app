@@ -25,8 +25,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { FlowTrackerCard } from "./FlowTrackerCard";
+import { FlowTrackerSliderCard } from "./FlowTrackerCard";
 import { useNavigate } from "react-router-dom";
+// import { C } from "@fullcalendar/core/internal-common";
 
 export function Dashboard({ user }) {
   const avgCycleLength = user?.avg_cycle_length || 28;
@@ -42,9 +43,34 @@ export function Dashboard({ user }) {
       limit: 1000,
     });
 
+  console.log("Cycle Response:", cycleResponse);
+
   const cycles = cycleResponse.data;
 
-  const latestCycle = cycles.length > 0 ? cycles[0] : null;
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  // Find cycles that started in the current month and year
+  const cyclesInCurrentMonth = cycles.filter((cycle) => {
+    if (!cycle.start_date) return false;
+    const startDate = new Date(cycle.start_date);
+    return (
+      startDate.getFullYear() === currentYear &&
+      startDate.getMonth() + 1 === currentMonth
+    );
+  });
+
+  // Get the latest cycle in the current month (by start_date)
+  const latestCycle =
+    cyclesInCurrentMonth.length > 0
+      ? cyclesInCurrentMonth.reduce((latest, current) =>
+          new Date(current.start_date) > new Date(latest.start_date)
+            ? current
+            : latest
+        )
+      : null;
+
   const [createCycle] = useCreateCycleMutation();
   const [updateCycle] = useUpdateCycleMutation();
 
@@ -58,6 +84,8 @@ export function Dashboard({ user }) {
   });
 
   const [flowLevel, setFlowLevel] = useState(null);
+
+  console.log("Latest Cycle:", latestCycle);
 
   // Update lastPeriodStart from latestCycle
   useEffect(() => {
@@ -140,11 +168,18 @@ export function Dashboard({ user }) {
   const formatMonth = (date) => format(new Date(date), "MMM");
 
   const lineData = cycles
-    .filter((c) => c.start_date && c.end_date)
+    .filter((c) => c.start_date)
     .map((cycle) => {
       const start = new Date(cycle.start_date);
-      const end = new Date(cycle.end_date);
-      const length = differenceInDays(end, start) + 1;
+
+      let length;
+      if (cycle.end_date) {
+        const end = new Date(cycle.end_date);
+        length = differenceInDays(end, start) + 1;
+      } else {
+        length = avgCycleLength;
+      }
+
       return { name: formatMonth(start), length };
     })
     .reverse();
@@ -158,15 +193,24 @@ export function Dashboard({ user }) {
 
   const barDataMap = {};
 
+  console.log("cycles:", cycles);
+  console.log("line data", lineData);
+
   cycles.forEach((cycle) => {
     const month = formatMonth(cycle.start_date);
 
-    if (cycle.flow_data && cycle.flow_data.length > 0) {
-      const totalWeight = cycle.flow_data.reduce((sum, entry) => {
-        return sum + (flowWeights[entry.flow_level] || 0);
+    console.log("flow data", cycle);
+
+    let flowData = cycle.flow_data || cycle.flowData || cycle.flow || [];
+
+    if (flowData && flowData.length > 0) {
+      const totalWeight = flowData.reduce((sum, entry) => {
+        const flowLevel =
+          entry.flow_level || entry.flowLevel || entry.level || entry.flow;
+        return sum + (flowWeights[flowLevel] || 0);
       }, 0);
 
-      const avgFlow = totalWeight / cycle.flow_data.length;
+      const avgFlow = totalWeight / flowData.length;
 
       barDataMap[month] = barDataMap[month]
         ? {
@@ -183,16 +227,17 @@ export function Dashboard({ user }) {
       flow: parseFloat((flowSum / count).toFixed(1)),
     })
   );
+  console.log("bar data", barData);
 
   const showGraphs = lineData.length >= 3;
   const isMenstrualPhase = cycleData.currentPhase === "menstrual";
-  
+  console.log("cd", cycleData);
+
   const navigate = useNavigate();
 
-   const handleCalender = () => {
-      navigate("/calendar");
-    };
-  
+  const handleCalender = () => {
+    navigate("/calendar");
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -344,8 +389,8 @@ export function Dashboard({ user }) {
             )}
 
             {/* Flow Tracker during menstruation */}
-            {isMenstrualPhase && (
-              <FlowTrackerCard
+            {!isMenstrualPhase && (
+              <FlowTrackerSliderCard
                 selectedFlow={flowLevel}
                 onSelect={setFlowLevel}
               />
