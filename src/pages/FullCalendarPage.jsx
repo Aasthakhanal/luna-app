@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -8,8 +8,6 @@ import {
   useCreateCycleMutation,
   useDeleteCycleMutation,
   useGetCyclesQuery,
-  // useGetCyclesQuery,
-  useLazyGetCyclesQuery,
 } from "../app/cyclesApi";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -32,6 +30,10 @@ const getPhaseClass = (type) => {
 };
 
 const FullCalendarPage = () => {
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentDay, setCurrentDay] = useState(new Date().getDate());
+
   const {
     data: periodDays = [],
     isLoading,
@@ -43,37 +45,121 @@ const FullCalendarPage = () => {
   const [createCycle] = useCreateCycleMutation();
   const [deleteCycle] = useDeleteCycleMutation();
 
-  const [startingPeriod, setStartingPeriod] = useState(false);
   const [lastCreatedCycleId, setLastCreatedCycleId] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
-  const [cycle, setCycle] = useState({});
 
   const { data: cyclesData } = useGetCyclesQuery({
     page: 1,
-    limit: 1,
-    date: new Date().toDateString(),
+    limit: 1000,
   });
 
-  const phaseEvents = useMemo(() => {
-    if (!cycle?.phases) return [];
+  const handleDatesSet = useCallback(
+    (dateInfo) => {
+      const newDate = new Date(dateInfo.start);
+      newDate.setDate(15);
+      const newMonth = newDate.getMonth() + 2;
+      const newYear = newDate.getFullYear();
+      const newDay = newDate.getDate();
 
-    return cycle.phases.flatMap((phase) => {
-      const start = new Date(phase.start_date);
-      const end = new Date(phase.end_date);
-      const days = [];
-
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        days.push({
-          id: `phase-${phase.id}-${d.toISOString()}`,
-          title: phase.type.charAt(0).toUpperCase() + phase.type.slice(1),
-          date: format(d, "yyyy-MM-dd"),
-          className: getPhaseClass(phase.type),
-        });
+      if (
+        newMonth !== currentMonth ||
+        newYear !== currentYear ||
+        newDay !== currentDay
+      ) {
+        setCurrentMonth(newMonth);
+        setCurrentYear(newYear);
+        setCurrentDay(newDay);
       }
+    },
+    [currentMonth, currentYear, currentDay]
+  );
 
-      return days;
+  const phaseEvents = useMemo(() => {
+    if (!cyclesData?.data) return [];
+
+    const today = new Date();
+    const currentRealMonth = today.getMonth() + 1;
+    const currentRealYear = today.getFullYear();
+
+    const isCurrentMonthAndYear =
+      currentMonth === currentRealMonth && currentYear === currentRealYear;
+
+    let latestCycleInCurrentMonth = null;
+
+    if (isCurrentMonthAndYear) {
+      const currentMonthStart = new Date(currentYear, currentMonth - 1, 1);
+      const currentMonthEnd = new Date(
+        currentYear,
+        currentMonth,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
+
+      const cyclesInCurrentMonth = cyclesData.data.filter((cycle) => {
+        const cycleStartDate = new Date(cycle.start_date);
+        return (
+          cycleStartDate >= currentMonthStart &&
+          cycleStartDate <= currentMonthEnd
+        );
+      });
+
+      if (cyclesInCurrentMonth.length > 0) {
+        latestCycleInCurrentMonth = cyclesInCurrentMonth.reduce(
+          (latest, current) => {
+            return new Date(current.start_date) > new Date(latest.start_date)
+              ? current
+              : latest;
+          }
+        );
+      }
+    }
+
+    console.log("current month", currentMonth);
+    console.log("current year", currentYear);
+    console.log("isCurrentMonthAndYear", isCurrentMonthAndYear);
+    console.log("latestCycleInCurrentMonth", latestCycleInCurrentMonth?.id);
+    console.log("period Days", periodDays);
+
+    return cyclesData.data.flatMap((cycle) => {
+      if (!cycle?.phases) return [];
+
+      return cycle.phases.flatMap((phase) => {
+        if (isCurrentMonthAndYear) {
+          const isLatestCycle =
+            latestCycleInCurrentMonth &&
+            cycle.id === latestCycleInCurrentMonth.id;
+
+          if (!isLatestCycle && phase.type !== "menstruation") {
+            return [];
+          }
+        } else {
+          if (phase.type !== "menstruation") {
+            return [];
+          }
+        }
+
+        const start = new Date(phase.start_date);
+        const end = new Date(phase.end_date);
+        const days = [];
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          days.push({
+            id: `phase-${phase.id}-${d.toISOString()}`,
+            title: phase.type.charAt(0).toUpperCase() + phase.type.slice(1),
+            date: format(d, "yyyy-MM-dd"),
+            className: getPhaseClass(phase.type),
+          });
+        }
+
+        return days;
+      });
     });
-  }, [cycle]);
+  }, [cyclesData, currentMonth, currentYear]);
+
+  // console.log("phase events", phaseEvents);
 
   const events = useMemo(() => {
     const periodEvents = Array.isArray(periodDays)
@@ -102,21 +188,11 @@ const FullCalendarPage = () => {
 
   const isDateSelectable = useCallback((selectInfo) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset to midnight
+    today.setHours(0, 0, 0, 0);
     const selected = new Date(selectInfo.startStr);
-    selected.setHours(0, 0, 0, 0); // also reset selected date
-    return selected <= today; // allow today and past
+    selected.setHours(0, 0, 0, 0);
+    return selected <= today;
   }, []);
-
-  /**
-   * UseEffect
-   * based on selected month of the calendar
-   * calls findAll api of the cycles
-   * take the 0 index from the cycle and update the setCycle state
-   */
-  useEffect(() => {
-    setCycle(cyclesData?.data[0]);
-  }, [cyclesData]);
 
   const handleDateSelect = (selectInfo) => {
     const selectedDate = selectInfo.startStr;
@@ -126,7 +202,6 @@ const FullCalendarPage = () => {
       action: {
         label: "Confirm",
         onClick: async () => {
-          setStartingPeriod(true);
           try {
             const response = await createCycle({
               start_date: selectedDate,
@@ -139,15 +214,12 @@ const FullCalendarPage = () => {
               description: "User started a new period cycle",
             }).unwrap();
 
-            setCycle(response);
             setLastCreatedCycleId(response.id);
             await refetch();
             toast.success("Cycle started successfully.");
           } catch (err) {
             console.error("Error starting cycle:", err);
             toast.error("Failed to start cycle.");
-          } finally {
-            setStartingPeriod(false);
           }
         },
       },
@@ -165,7 +237,6 @@ const FullCalendarPage = () => {
             await deleteCycle(lastCreatedCycleId).unwrap();
             toast.success("Last period removed.");
             setLastCreatedCycleId(null);
-            setCycle({});
             await refetch();
           } catch (err) {
             console.error("Error deleting cycle:", err);
@@ -222,6 +293,7 @@ const FullCalendarPage = () => {
           }}
           dayMaxEventRows={true}
           fixedWeekCount={false}
+          datesSet={handleDatesSet}
         />
         {lastCreatedCycleId && (
           <Button

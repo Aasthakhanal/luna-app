@@ -55,6 +55,13 @@ export const periodDaysApi = createApi({
       }),
       invalidatesTags: (result, error, id) => [{ type: "PeriodDays", id }],
     }),
+    getTodayPeriodDay: builder.query({
+      query: (userId) => ({
+        url: "/period-days/today",
+        method: "GET",
+        params: { user_id: userId },
+      }),
+    }),
   }),
 });
 
@@ -64,4 +71,5 @@ export const {
   useCreatePeriodDayMutation,
   useUpdatePeriodDayMutation,
   useDeletePeriodDayMutation,
+  useGetTodayPeriodDayQuery,
 } = periodDaysApi;
