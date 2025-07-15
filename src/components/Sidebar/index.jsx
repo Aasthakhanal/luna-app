@@ -19,6 +19,7 @@ const Sidebar = ({ isCollapsed }) => {
         className={`transition-all duration-300  ${
           isCollapsed ? "h-15 w-15" : "h-35 w-35"
         }`}
+        onClick={() => navigate("/dashboard")}
       />
 
       {/* Menu Items */}

@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { FiMenu, FiX } from "react-icons/fi";
 import logo from "../assets/lunaa.png";
 
+
 const Header = ({ isAuthenticated }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
+
   return (
-    <header className="fixed w-full h-30 bg-gradient-to-l from-red-200 to-white shadow-md z-50 top-0 ">
+    <header className="fixed w-full h-30 bg-gradient-to-l from-red-50 to-white shadow-md z-50 top-0 ">
       <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
