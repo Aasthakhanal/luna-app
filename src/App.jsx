@@ -16,7 +16,10 @@ import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
 import AppLayout from "./Layouts/AppLayout";
 import FullCalendarPage from "./pages/FullCalendarPage";
+import MyAccount from "@/pages/MyAccount";
 import { Toaster } from "sonner";
+import ChangePassword from "@/pages/ChangePassword";
+import Support from "@/pages/Support";
 
 const ProtectedRoutes = () => {
   const token = Cookies.get("authToken");
@@ -79,6 +82,9 @@ function App() {
             <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="my-account" element={<MyAccount />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/support" element={<Support />} />
           </Route>
         </Routes>
       </Router>

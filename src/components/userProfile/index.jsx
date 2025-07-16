@@ -15,7 +15,7 @@ import {
   Settings,
   Headphones,
   LogOut,
-  Home,
+  LockKeyholeOpen,
   UserCheck,
 } from "lucide-react";
 import { logout } from "@/features/auth/authSlice";
@@ -84,23 +84,13 @@ const UserProfile = ({ user }) => {
             </button>
             <button
               onClick={() => {
-                navigate("/profile");
+                navigate("/change-password");
                 setOpen(false);
               }}
               className="w-full text-left px-4 py-2 rounded hover:bg-pink-50 transition flex items-center gap-2"
             >
-              <Home className="h-4 w-4" />
-              Profile
-            </button>
-            <button
-              onClick={() => {
-                navigate("/settings");
-                setOpen(false);
-              }}
-              className="w-full text-left px-4 py-2 rounded hover:bg-pink-50 transition flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
+              <LockKeyholeOpen className="h-4 w-4" />
+              Change password
             </button>
             <button
               onClick={() => {

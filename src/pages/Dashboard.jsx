@@ -283,7 +283,7 @@ export function Dashboard({ user }) {
                     <span className="text-2xl font-bold text-gray-700">
                       Day {cycleData.dayOfCycle}
                     </span>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" size="sm">
                       {cycleData.averageCycleLength} day cycle
                     </Badge>
                   </div>
@@ -310,7 +310,9 @@ export function Dashboard({ user }) {
                     <span className="text-2xl font-bold text-gray-700">
                       {format(cycleData.nextPeriodDate, "MMMM dd, yyyy")}
                     </span>
-                    <Badge variant="secondary">Predicted</Badge>
+                    <Badge variant="secondary" size="sm">
+                      Predicted
+                    </Badge>
                   </div>
                   <p className="text-sm text-gray-500">
                     {format(cycleData.nextPeriodDate, "EEEE")}
@@ -331,7 +333,9 @@ export function Dashboard({ user }) {
                     <span className="text-3xl font-bold text-green-600">
                       No
                     </span>
-                    <Badge variant="secondary">Stable</Badge>
+                    <Badge variant="secondary" size="lg">
+                      Stable
+                    </Badge>
                   </div>
                   <p className="text-xs text-gray-500 pt-3 ">
                     Tip: Consistent tracking helps detect irregularities early.

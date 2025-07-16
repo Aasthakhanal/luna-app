@@ -17,7 +17,7 @@ import { format } from "date-fns";
 const getPhaseClass = (type) => {
   switch (type) {
     case "menstruation":
-      return "bg-red-200 text-red-800";
+      return "bg-red-200 ";
     case "follicular":
       return "bg-yellow-200 text-yellow-800";
     case "ovulation":
@@ -265,7 +265,7 @@ const FullCalendarPage = () => {
   }
 
   return (
-    <Card className="mx-3 border-0 bg-gradient-to-b from-rose-100 to-pink-50 shadow-lg">
+    <Card className="mx-3 border-0 shadow-lg">
       <CardHeader className="bg-transparent p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <CardTitle className="text-4xl text-rose-700 hover:text-primary font-bold">
