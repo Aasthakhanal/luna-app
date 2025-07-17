@@ -5,7 +5,6 @@ const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       {/* Page Header */}

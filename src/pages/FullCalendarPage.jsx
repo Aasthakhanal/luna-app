@@ -17,7 +17,7 @@ import { format } from "date-fns";
 const getPhaseClass = (type) => {
   switch (type) {
     case "menstruation":
-      return "bg-red-200 ";
+      return "bg-red-200 text-red-800";
     case "follicular":
       return "bg-yellow-200 text-yellow-800";
     case "ovulation":
@@ -117,12 +117,6 @@ const FullCalendarPage = () => {
       }
     }
 
-    console.log("current month", currentMonth);
-    console.log("current year", currentYear);
-    console.log("isCurrentMonthAndYear", isCurrentMonthAndYear);
-    console.log("latestCycleInCurrentMonth", latestCycleInCurrentMonth?.id);
-    console.log("period Days", periodDays);
-
     return cyclesData.data.flatMap((cycle) => {
       if (!cycle?.phases) return [];
 
@@ -158,8 +152,6 @@ const FullCalendarPage = () => {
       });
     });
   }, [cyclesData, currentMonth, currentYear]);
-
-  // console.log("phase events", phaseEvents);
 
   const events = useMemo(() => {
     const periodEvents = Array.isArray(periodDays)
@@ -265,7 +257,7 @@ const FullCalendarPage = () => {
   }
 
   return (
-    <Card className="mx-3 border-0 shadow-lg">
+    <Card className="mx-3 border-0 bg-gradient-to-b from-rose-100 to-pink-50 shadow-lg">
       <CardHeader className="bg-transparent p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <CardTitle className="text-4xl text-rose-700 hover:text-primary font-bold">

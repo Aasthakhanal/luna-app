@@ -12,10 +12,10 @@ export const periodDaysApi = createApi({
   tagTypes: ["PeriodDays"],
   endpoints: (builder) => ({
     getPeriodDays: builder.query({
-      query: ({ page = 1, limit = 1000, search = "" } = {}) => ({
+      query: ({ page = 1, limit = 100, search = "", cycle_id } = {}) => ({
         url: "/period-days",
         method: "GET",
-        params: { page, limit, search },
+        params: { page, limit, search, cycle_id },
       }),
       providesTags: (result) =>
         result
@@ -25,6 +25,7 @@ export const periodDaysApi = createApi({
             ]
           : [{ type: "PeriodDays", id: "LIST" }],
     }),
+
     getPeriodDay: builder.query({
       query: (id) => ({
         url: `/period-days/${id}`,
@@ -55,13 +56,6 @@ export const periodDaysApi = createApi({
       }),
       invalidatesTags: (result, error, id) => [{ type: "PeriodDays", id }],
     }),
-    getTodayPeriodDay: builder.query({
-      query: (userId) => ({
-        url: "/period-days/today",
-        method: "GET",
-        params: { user_id: userId },
-      }),
-    }),
   }),
 });
 
@@ -71,5 +65,4 @@ export const {
   useCreatePeriodDayMutation,
   useUpdatePeriodDayMutation,
   useDeletePeriodDayMutation,
-  useGetTodayPeriodDayQuery,
 } = periodDaysApi;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -10,11 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CyclePhaseCard } from "./CyclePhaseCard";
 import { format, differenceInDays, addDays } from "date-fns";
-import {
-  useCreateCycleMutation,
-  useUpdateCycleMutation,
-  useGetCyclesQuery,
-} from "../app/cyclesApi";
+import { useGetCyclesQuery } from "../app/cyclesApi";
+import { useGetPeriodDaysQuery } from "@/app/periodDaysApi";
 import {
   LineChart,
   Line,
@@ -27,7 +24,6 @@ import {
 } from "recharts";
 import { FlowTrackerSliderCard } from "./FlowTrackerCard";
 import { useNavigate } from "react-router-dom";
-// import { C } from "@fullcalendar/core/internal-common";
 
 export function Dashboard({ user }) {
   const avgCycleLength = user?.avg_cycle_length || 28;
@@ -37,11 +33,10 @@ export function Dashboard({ user }) {
     addDays(new Date(), -15)
   );
 
-  const { data: cycleResponse = { data: [] }, refetch: refetchCycles } =
-    useGetCyclesQuery({
-      page: 1,
-      limit: 1000,
-    });
+  const { data: cycleResponse = { data: [] } } = useGetCyclesQuery({
+    page: 1,
+    limit: 1000,
+  });
 
   console.log("Cycle Response:", cycleResponse);
 
@@ -51,7 +46,6 @@ export function Dashboard({ user }) {
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
 
-  // Find cycles that started in the current month and year
   const cyclesInCurrentMonth = cycles.filter((cycle) => {
     if (!cycle.start_date) return false;
     const startDate = new Date(cycle.start_date);
@@ -61,7 +55,6 @@ export function Dashboard({ user }) {
     );
   });
 
-  // Get the latest cycle in the current month (by start_date)
   const latestCycle =
     cyclesInCurrentMonth.length > 0
       ? cyclesInCurrentMonth.reduce((latest, current) =>
@@ -71,8 +64,25 @@ export function Dashboard({ user }) {
         )
       : null;
 
-  const [createCycle] = useCreateCycleMutation();
-  const [updateCycle] = useUpdateCycleMutation();
+  const [selectedCycleId, setSelectedCycleId] = useState(null);
+
+  const selectedCycle = selectedCycleId
+    ? cycles.find((cycle) => cycle.id === selectedCycleId)
+    : cycles[0];
+
+  useEffect(() => {
+    if (cycles.length > 0 && !selectedCycleId) {
+      setSelectedCycleId(cycles[0].id);
+    }
+  }, [cycles, selectedCycleId]);
+
+  const { data: periodDaysData } = useGetPeriodDaysQuery({
+    page: 1,
+    limit: 100,
+    cycle_id: selectedCycle?.id || null,
+  });
+
+  console.log("period days", periodDaysData);
 
   const [cycleData, setCycleData] = useState({
     averageCycleLength: avgCycleLength,
@@ -85,9 +95,6 @@ export function Dashboard({ user }) {
 
   const [flowLevel, setFlowLevel] = useState(null);
 
-  console.log("Latest Cycle:", latestCycle);
-
-  // Update lastPeriodStart from latestCycle
   useEffect(() => {
     if (latestCycle?.start_date) {
       const startDate = new Date(latestCycle.start_date);
@@ -95,7 +102,6 @@ export function Dashboard({ user }) {
     }
   }, [latestCycle]);
 
-  // Calculate cycle details
   useEffect(() => {
     const today = new Date();
     const dayOfCycle = differenceInDays(today, lastPeriodStart) + 1;
@@ -129,32 +135,6 @@ export function Dashboard({ user }) {
     }));
   }, [lastPeriodStart, cycleData.averageCycleLength, avgPeriodLength]);
 
-  // Handle first period start
-  const handlePeriodStart = async (clickedDate) => {
-    const newStartDate = new Date(clickedDate);
-
-    try {
-      if (latestCycle) {
-        await updateCycle({
-          id: latestCycle.id,
-          start_date: newStartDate.toISOString(),
-          predicted_start_date: newStartDate.toISOString(),
-        });
-      } else {
-        await createCycle({
-          user_id: user.id,
-          start_date: newStartDate.toISOString(),
-          predicted_start_date: newStartDate.toISOString(),
-        });
-      }
-
-      setLastPeriodStart(newStartDate);
-      refetchCycles();
-    } catch (error) {
-      console.error("Failed to update/start cycle:", error);
-    }
-  };
-
   const daysUntilNextPeriod = differenceInDays(
     cycleData.nextPeriodDate,
     new Date()
@@ -165,10 +145,13 @@ export function Dashboard({ user }) {
   // ============================
   // 🎯 Real chart data building
   // ============================
-  const formatMonth = (date) => format(new Date(date), "MMM");
 
   const lineData = cycles
     .filter((c) => c.start_date)
+    .sort(
+      (a, b) =>
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+    )
     .map((cycle) => {
       const start = new Date(cycle.start_date);
 
@@ -179,10 +162,17 @@ export function Dashboard({ user }) {
       } else {
         length = avgCycleLength;
       }
+      const day = start.getDate();
+      const month = start.getMonth() + 1;
 
-      return { name: formatMonth(start), length };
-    })
-    .reverse();
+      return {
+        shortDate: `${month}/${day}`,
+        fullDate: start.toDateString(),
+        length,
+      };
+    });
+
+  lineData.pop();
 
   const flowWeights = {
     spotting: 1,
@@ -191,47 +181,37 @@ export function Dashboard({ user }) {
     heavy: 4,
   };
 
-  const barDataMap = {};
-
-  console.log("cycles:", cycles);
-  console.log("line data", lineData);
-
-  cycles.forEach((cycle) => {
-    const month = formatMonth(cycle.start_date);
-
-    console.log("flow data", cycle);
-
-    let flowData = cycle.flow_data || cycle.flowData || cycle.flow || [];
-
-    if (flowData && flowData.length > 0) {
-      const totalWeight = flowData.reduce((sum, entry) => {
-        const flowLevel =
-          entry.flow_level || entry.flowLevel || entry.level || entry.flow;
-        return sum + (flowWeights[flowLevel] || 0);
-      }, 0);
-
-      const avgFlow = totalWeight / flowData.length;
-
-      barDataMap[month] = barDataMap[month]
-        ? {
-            flowSum: barDataMap[month].flowSum + avgFlow,
-            count: barDataMap[month].count + 1,
-          }
-        : { flowSum: avgFlow, count: 1 };
+  const barData = useMemo(() => {
+    if (!periodDaysData?.data || !Array.isArray(periodDaysData.data)) {
+      return [];
     }
-  });
 
-  const barData = Object.entries(barDataMap).map(
-    ([month, { flowSum, count }]) => ({
-      name: month,
-      flow: parseFloat((flowSum / count).toFixed(1)),
-    })
-  );
+    const sortedData = [...periodDaysData.data].sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    return sortedData
+      .map((entry, index) => {
+        const flowLevel =
+          entry.flow_level ||
+          entry.flowLevel ||
+          entry.level ||
+          entry.flow ||
+          entry.type;
+
+        return {
+          name: `Day ${index + 1}`,
+          flow: flowWeights[flowLevel?.toLowerCase()] || 0,
+          date: entry.date,
+        };
+      })
+      .filter((item) => item.flow > 0);
+  }, [periodDaysData]);
+
   console.log("bar data", barData);
 
   const showGraphs = lineData.length >= 3;
   const isMenstrualPhase = cycleData.currentPhase === "menstrual";
-  console.log("cd", cycleData);
 
   const navigate = useNavigate();
 
@@ -283,7 +263,7 @@ export function Dashboard({ user }) {
                     <span className="text-2xl font-bold text-gray-700">
                       Day {cycleData.dayOfCycle}
                     </span>
-                    <Badge variant="secondary" size="sm">
+                    <Badge variant="secondary">
                       {cycleData.averageCycleLength} day cycle
                     </Badge>
                   </div>
@@ -310,9 +290,7 @@ export function Dashboard({ user }) {
                     <span className="text-2xl font-bold text-gray-700">
                       {format(cycleData.nextPeriodDate, "MMMM dd, yyyy")}
                     </span>
-                    <Badge variant="secondary" size="sm">
-                      Predicted
-                    </Badge>
+                    <Badge variant="secondary">Predicted</Badge>
                   </div>
                   <p className="text-sm text-gray-500">
                     {format(cycleData.nextPeriodDate, "EEEE")}
@@ -333,9 +311,7 @@ export function Dashboard({ user }) {
                     <span className="text-3xl font-bold text-green-600">
                       No
                     </span>
-                    <Badge variant="secondary" size="lg">
-                      Stable
-                    </Badge>
+                    <Badge variant="secondary">Stable</Badge>
                   </div>
                   <p className="text-xs text-gray-500 pt-3 ">
                     Tip: Consistent tracking helps detect irregularities early.
@@ -354,9 +330,31 @@ export function Dashboard({ user }) {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={200}>
                       <LineChart data={lineData}>
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="shortDate" />
                         <YAxis />
-                        <Tooltip />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div
+                                  style={{
+                                    background: "white",
+                                    padding: "5px",
+                                    border: "1px solid #ccc",
+                                  }}
+                                >
+                                  <p>
+                                    <strong>
+                                      {payload[0].payload.fullDate}
+                                    </strong>
+                                  </p>
+                                  <p>Length: {payload[0].value} days</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
                         <Line
                           type="monotone"
                           dataKey="length"
@@ -370,17 +368,51 @@ export function Dashboard({ user }) {
 
                 <Card className="bg-white shadow">
                   <CardHeader>
-                    <CardTitle>Flow Trends Over Time</CardTitle>
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Flow Trends Over Time</CardTitle>
+                      <select
+                        value={selectedCycleId || ""}
+                        onChange={(e) =>
+                          setSelectedCycleId(parseInt(e.target.value))
+                        }
+                        className="w-48 h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select a cycle</option>
+                        {cycles.map((cycle, index) => (
+                          <option key={cycle.id} value={cycle.id}>
+                            Cycle {cycles.length - index} -{" "}
+                            {format(new Date(cycle.start_date), "MMM dd, yyyy")}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={barData}>
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="flow" fill="#d5595f" barSize={30} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {barData && barData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={barData}>
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="flow" fill="#d5595f" barSize={30} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-48 text-gray-500">
+                        <div className="text-4xl mb-4">📊</div>
+                        <p className="text-lg font-medium mb-2">
+                          No Flow Data Available
+                        </p>
+                        <p className="text-sm text-center">
+                          {selectedCycle
+                            ? `No flow data recorded for this cycle yet.`
+                            : `Select a cycle to view flow trends.`}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          Track your flow daily for better insights!
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -393,10 +425,12 @@ export function Dashboard({ user }) {
             )}
 
             {/* Flow Tracker during menstruation */}
-            {!isMenstrualPhase && (
+            {isMenstrualPhase && (
               <FlowTrackerSliderCard
                 selectedFlow={flowLevel}
                 onSelect={setFlowLevel}
+                userId={latestCycle?.user_id}
+                cycleId={latestCycle?.id}
               />
             )}
           </>
