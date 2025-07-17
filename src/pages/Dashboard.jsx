@@ -136,9 +136,11 @@ export function Dashboard({ user }) {
   }, [lastPeriodStart, cycleData.averageCycleLength, avgPeriodLength]);
 
   const daysUntilNextPeriod = differenceInDays(
-    cycleData.nextPeriodDate,
-    new Date()
+    latestCycle?.predicted_end_date,
+    new Date(),
   );
+  console.log("daysUntilNextPeriod", daysUntilNextPeriod);
+  console.log("latestCycle", latestCycle);
   const cycleProgress =
     (cycleData.dayOfCycle / cycleData.averageCycleLength) * 100;
 
@@ -174,6 +176,7 @@ export function Dashboard({ user }) {
 
   lineData.pop();
 
+  console.log("Raw periodDaysData", periodDaysData);
   const flowWeights = {
     spotting: 1,
     light: 2,
@@ -263,9 +266,6 @@ export function Dashboard({ user }) {
                     <span className="text-2xl font-bold text-gray-700">
                       Day {cycleData.dayOfCycle}
                     </span>
-                    <Badge variant="secondary">
-                      {cycleData.averageCycleLength} day cycle
-                    </Badge>
                   </div>
                   <Progress
                     value={cycleProgress}
