@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { jwtDecode } from "jwt-decode";
 import logo from "../assets/lunaa.png";
+import { useNavigate } from "react-router-dom";
+
 
 const signupFormSchema = z
   .object({
@@ -54,6 +56,7 @@ const Signup = () => {
   const dispatch = useDispatch();
 
   const [signup, { isLoading }] = useSignupMutation();
+  const navigate = useNavigate();
 
   const handleSignup = async (values) => {
     setError("");
@@ -69,6 +72,7 @@ const Signup = () => {
       const decodedResponse = response ? jwtDecode(response?.token) : null;
       const userId = decodedResponse?.user_id;
       dispatch(setCredentials({ user: userId, token: response?.token }));
+      navigate("/login");
     } catch (err) {
       setError(err.data?.message || "Signup failed. Please try again.");
     }
@@ -218,6 +222,7 @@ const Signup = () => {
             {/* Sign Up Button */}
             <Button disabled={isLoading} className="w-full text-white">
               {isLoading ? "Creating Account..." : "Create Account"}
+             
             </Button>
           </form>
         </Form>
