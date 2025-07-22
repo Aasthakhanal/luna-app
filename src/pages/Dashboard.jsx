@@ -12,6 +12,7 @@ import { CyclePhaseCard } from "./CyclePhaseCard";
 import { format, differenceInDays, addDays } from "date-fns";
 import { useGetCyclesQuery } from "../app/cyclesApi";
 import { useGetPeriodDaysQuery } from "@/app/periodDaysApi";
+import { useGetIrregularitiesQuery } from "@/app/irregularitiesApi";
 import {
   LineChart,
   Line,
@@ -24,6 +25,10 @@ import {
 } from "recharts";
 import { FlowTrackerSliderCard } from "./FlowTrackerCard";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import pic from "../assets/pic2.avif";
+import { motion } from "framer-motion";
+import GynecologistsPage from "./Gynecologists";
 
 export function Dashboard({ user }) {
   const avgCycleLength = user?.avg_cycle_length || 28;
@@ -66,15 +71,28 @@ export function Dashboard({ user }) {
 
   const [selectedCycleId, setSelectedCycleId] = useState(null);
 
-  const selectedCycle = selectedCycleId
-    ? cycles.find((cycle) => cycle.id === selectedCycleId)
-    : cycles[0];
+  const sortedCycles = useMemo(() => {
+    return [...cycles].sort(
+      (a, b) => new Date(b.start_date) - new Date(a.start_date)
+    );
+  }, [cycles]);
 
   useEffect(() => {
-    if (cycles.length > 0 && !selectedCycleId) {
-      setSelectedCycleId(cycles[0].id);
+    if (sortedCycles.length > 0 && !selectedCycleId) {
+      setSelectedCycleId(sortedCycles[0].id);
     }
-  }, [cycles, selectedCycleId]);
+  }, [sortedCycles, selectedCycleId]);
+
+  const selectedCycle = selectedCycleId
+    ? sortedCycles.find((cycle) => cycle.id === selectedCycleId)
+    : sortedCycles[0];
+
+  const { data: irregularitiesData } = useGetIrregularitiesQuery({
+    page: 1,
+    limit: 100,
+    cycle_id: latestCycle?.id || null,
+  });
+  console.log("irregularities", irregularitiesData);
 
   const { data: periodDaysData } = useGetPeriodDaysQuery({
     page: 1,
@@ -137,7 +155,7 @@ export function Dashboard({ user }) {
 
   const daysUntilNextPeriod = differenceInDays(
     latestCycle?.predicted_end_date,
-    new Date(),
+    new Date()
   );
   console.log("daysUntilNextPeriod", daysUntilNextPeriod);
   console.log("latestCycle", latestCycle);
@@ -226,31 +244,64 @@ export function Dashboard({ user }) {
     <div className="min-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
         {!latestCycle ? (
-          <div className="max-w-3xl mx-auto text-center py-5 px-2 bg-rose-50 rounded-lg shadow-md">
-            <h2 className="text-3xl font-extrabold text-primary mb-4">
-              Welcome to Luna — Your Best Friend for Period Tracking 🌙
-            </h2>
-            <p className="text-lg text-rose-800 mb-6 leading-relaxed">
-              Track your period on a monthly basis, monitor your flow levels,
-              and get alerts to detect irregularities early — all in one
-              easy-to-use webapp.
-            </p>
-            <ul className="text-left list-disc list-inside mb-6 text-rose-700">
-              <li>Keep an accurate monthly period calendar</li>
-              <li>Record and analyze your flow intensity</li>
-              <li>Detect irregularities and stay informed</li>
-            </ul>
-            <button
-              onClick={() => {
-                handleCalender();
-              }}
-              className="px-6 py-3 bg-rose-600 text-white rounded-md font-semibold hover:bg-rose-700 transition"
+          <div className="min-h-screen w-full bg-rose-50 flex flex-col md:flex-row items-center justify-center px-6 py-16 gap-10 overflow-hidden">
+            {/* LEFT IMAGE with FADE IN */}
+            <motion.div
+              className="hidden md:flex md:w-1/2 justify-center"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
             >
-              Log Your First Period
-            </button>
-            <p className="mt-8 text-sm text-rose-600 italic">
-              Your data is private and secure. You’re in control at all times.
-            </p>
+              <img
+                src={pic}
+                alt="Period Tracking Illustration"
+                className="w-full max-w-md rounded-xl shadow-lg object-contain"
+              />
+            </motion.div>
+
+            {/* RIGHT: ANIMATED CONTENT */}
+            <motion.div
+              className="w-full md:w-1/2 text-center md:text-left"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 1 }}
+            >
+              <h1 className="text-4xl md:text-5xl font-bold text-rose-700 leading-tight mb-6">
+                Welcome to Luna 🩸
+              </h1>
+
+              {/* Progressive Disclosure / Carousel with ShadCN Tabs */}
+              <Tabs defaultValue="step1" className="max-w-md mx-auto md:mx-0">
+                <TabsList className="grid grid-cols-3 bg-rose-100 text-rose-700 rounded-lg mb-4">
+                  <TabsTrigger value="step1">Track</TabsTrigger>
+                  <TabsTrigger value="step2">Monitor</TabsTrigger>
+                  <TabsTrigger value="step3">Alert</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="step1" className="text-lg text-rose-800">
+                  Track your periods with a beautiful, accurate calendar built
+                  just for you.
+                </TabsContent>
+                <TabsContent value="step2" className="text-lg text-rose-800">
+                  Monitor your calender, flow, and cycle history in one place.
+                </TabsContent>
+                <TabsContent value="step3" className="text-lg text-rose-800">
+                  Get smart alerts about irregularities or upcoming periods.
+                </TabsContent>
+              </Tabs>
+
+              {/* CTA Button */}
+              <button
+                onClick={handleCalender}
+                className="mt-6 px-8 py-4 bg-rose-600 text-white rounded-xl font-semibold shadow hover:bg-rose-700 transition duration-200 w-full md:w-auto"
+              >
+                Log Your First Period
+              </button>
+
+              <p className="mt-6 text-sm text-rose-600 italic">
+                Your data stays private and secure. Always.
+              </p>
+            </motion.div>
           </div>
         ) : (
           <>
@@ -303,19 +354,53 @@ export function Dashboard({ user }) {
               </div>
 
               <Card className="bg-red-50 text-gray-700 shadow-md">
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-0">
                   <CardTitle>Irregularity Detected ⚠️</CardTitle>
+                  <p>{irregularitiesData?.data[0].irregularity_type}</p>
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between  items-center mb-2">
-                    <span className="text-3xl font-bold text-green-600">
-                      No
-                    </span>
-                    <Badge variant="secondary">Stable</Badge>
+                    {irregularitiesData?.data[0] ? (
+                      <span className="text-3xl font-bold text-green-600">
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="text-3xl font-bold text-green-600">
+                        No
+                      </span>
+                    )}
+                    {irregularitiesData?.data[0] ? (
+                      <Badge variant="destructive">Alert</Badge>
+                    ) : (
+                      <Badge variant="secondary">Stable</Badge>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 pt-3 ">
-                    Tip: Consistent tracking helps detect irregularities early.
-                  </p>
+                  {irregularitiesData?.data[0] ? (
+                    <>
+                      <p className="text-xs text-gray-500 pt-3">
+                        Looking for a nearby gynecologist? We’re here to help.
+                      </p>
+                      <button
+                        className="mt-2 text-xs px-4 py-2 bg-primary text-white rounded-md hover:bg-rose-600 transition"
+                        onClick={() => {
+                           if(confirm(
+                             "Allow the system to access your location to find nearby gynecologists?"
+                           )) {
+
+                           navigate("/gynecologists");
+                           }
+                           return ;
+                        }}
+                      >
+                        Find Gynecologists Near You
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-500 pt-3">
+                      Tip: Consistent tracking helps detect irregularities
+                      early.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -378,9 +463,9 @@ export function Dashboard({ user }) {
                         className="w-48 h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a cycle</option>
-                        {cycles.map((cycle, index) => (
+                        {sortedCycles.map((cycle, index) => (
                           <option key={cycle.id} value={cycle.id}>
-                            Cycle {cycles.length - index} -{" "}
+                            Cycle {sortedCycles.length - index} -{" "}
                             {format(new Date(cycle.start_date), "MMM dd, yyyy")}
                           </option>
                         ))}

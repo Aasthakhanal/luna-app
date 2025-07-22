@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Navigate,
+  Outlet,
 } from "react-router-dom";
 import { useState } from "react";
 import Login from "./pages/Login";
@@ -20,6 +21,9 @@ import MyAccount from "@/pages/MyAccount";
 import { Toaster } from "sonner";
 import ChangePassword from "@/pages/ChangePassword";
 import Support from "@/pages/Support";
+import GynecologistsPage from "./pages/Gynecologists";
+import Admin from "./pages/admin/Admin";
+import AddGynecologists from "./pages/admin/AddGynecologists";
 
 const ProtectedRoutes = () => {
   const token = Cookies.get("authToken");
@@ -28,7 +32,7 @@ const ProtectedRoutes = () => {
     const user_id = decodedToken?.user_id;
     if (decodedToken && decodedToken.exp) {
       const currentTime = Date.now() / 1000;
-      if (currentTime > decodedToken?.exp) {
+      if (currentTime > decodedToken.exp) {
         Cookies.remove("authToken");
         return <Navigate to="/login" />;
       }
@@ -37,7 +41,6 @@ const ProtectedRoutes = () => {
       Cookies.remove("authToken");
       return <Navigate to="/login" />;
     }
-
     return <AppLayout />;
   } catch (err) {
     console.error(err);
@@ -46,9 +49,27 @@ const ProtectedRoutes = () => {
   }
 };
 
+const AdminProtectedRoute = ({ user }) => {
+  const token = Cookies.get("authToken");
+  if (!token) return <Navigate to="/login" />;
+
+  let role;
+  try {
+    role = user.role;
+  } catch {
+    return <Navigate to="/login" />;
+  }
+
+  if (role !== "ADMIN") {
+    return <Navigate to="/dashboard" />;
+  } else {
+    return <Navigate to="/admin" />;
+  }
+};
 function App() {
   const token = Cookies.get("authToken");
   const isAuthenticated = !!token;
+
   return (
     <>
       <Toaster richColors position="top-right" />
@@ -58,7 +79,7 @@ function App() {
           <Route
             path="/"
             element={<Landingpage isAuthenticated={isAuthenticated} />}
-          ></Route>
+          />
           <Route
             path="/login"
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
@@ -70,8 +91,15 @@ function App() {
             }
           />
 
-          {/* Projected Routes */}
-          <Route path="/" element={<ProtectedRoutes />}>
+          {/* Protected routes wrapper */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoutes
+                user={isAuthenticated ? jwtDecode(token) : null}
+              />
+            }
+          >
             <Route
               path="dashboard"
               element={
@@ -83,12 +111,27 @@ function App() {
             <Route path="chatbot" element={<Chatbot />} />
             <Route path="settings" element={<Settings />} />
             <Route path="my-account" element={<MyAccount />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/support" element={<Support />} />
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="support" element={<Support />} />
+            <Route path="gynecologists" element={<GynecologistsPage />} />
+
+            {/* Admin protected routes */}
+            <Route
+              path="admin"
+              element={
+                <AdminProtectedRoute
+                  user={isAuthenticated ? jwtDecode(token) : null}
+                />
+              }
+            >
+              <Route index element={<Admin />} />
+              <Route path="add-gynecologist" element={<AddGynecologists />} />
+            </Route>
           </Route>
         </Routes>
       </Router>
     </>
   );
 }
+
 export default App;
