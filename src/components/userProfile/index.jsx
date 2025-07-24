@@ -21,19 +21,17 @@ import {
 import { logout } from "@/features/auth/authSlice";
 
 const UserProfile = ({ user }) => {
-  const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
-    setOpen(false);
   };
 
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet>
         <SheetTrigger asChild>
           <div className="flex items-center space-x-3 cursor-pointer select-none">
             <img

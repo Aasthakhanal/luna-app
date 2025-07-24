@@ -383,9 +383,10 @@ export function Dashboard({ user }) {
                       <button
                         className="mt-2 text-xs px-4 py-2 bg-primary text-white rounded-md hover:bg-rose-600 transition"
                         onClick={() => {
-                           if(confirm(
-                             "Allow the system to access your location to find nearby gynecologists?"
-                           )) {
+                          //  if(confirm(
+                          //    "Allow the system to access your location to find nearby gynecologists?"
+                          //  ))
+                            {
 
                            navigate("/gynecologists");
                            }

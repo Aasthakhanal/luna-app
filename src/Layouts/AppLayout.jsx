@@ -33,7 +33,7 @@ const AppLayout = () => {
 
   return (
     <div className="flex h-screen w-screen bg-white">
-      <Sidebar isCollapsed={isCollapsed} />
+      <Sidebar isCollapsed={isCollapsed} role={user?.role} />
 
       <div className="flex-1 flex flex-col overflow-auto">
         <Navbar

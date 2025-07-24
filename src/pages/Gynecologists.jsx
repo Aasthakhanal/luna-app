@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { useGetGynecologistsQuery } from "@/app/gynecologistsApi";
 import {
   Card,
@@ -12,12 +12,24 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Navigation } from "lucide-react";
 
 const GynecologistsPage = () => {
- 
+  const [location, setLocation] = useState(null);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      setLocation({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+    });
+  }, []);
+
   const { data, error, isLoading } = useGetGynecologistsQuery({
     limit: 10,
     page: 1,
-  }); 
-
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+  });
+  console.log(location, "latitude");
 
   if (isLoading)
     return <p className="text-center py-10">Loading nearby gynecologists...</p>;
