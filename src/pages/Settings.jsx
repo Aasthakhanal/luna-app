@@ -1,9 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ToggleLeft, ToggleRight } from "lucide-react";
+import {
+  useFindUserQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "@/app/userApi";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const Settings = () => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+  const userId = useSelector((state) => state.auth.users?.id); 
+  const { data: user, isLoading } = useFindUserQuery(userId);
+  const [updateUser] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+  });
+
+  const [notifications, setNotifications] = useState(true); 
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        full_name: user.full_name || "",
+        email: user.email || "",
+      });
+    }
+  }, [user]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await updateUser({ id: userId, ...formData }).unwrap();
+      toast.success("User updated successfully");
+    } catch (err) {
+      toast.error("Failed to update user");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteUser(userId).unwrap();
+      toast.success("Account deleted");
+      // Redirect or logout here
+    } catch (err) {
+      toast.error("Failed to delete account");
+    }
+  };
+
+  if (isLoading) return <p className="text-center">Loading...</p>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
@@ -16,12 +67,14 @@ const Settings = () => {
       {/* Personal Info */}
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-4">Personal Information</h2>
-        <form className="space-y-4 max-w-lg">
+        <form className="space-y-4 max-w-lg" onSubmit={handleUpdate}>
           <div>
             <label className="block text-sm font-medium">Full Name</label>
             <input
               type="text"
-              defaultValue="John Doe"
+              name="full_name"
+              value={formData.full_name}
+              onChange={handleChange}
               className="mt-1 w-full border rounded px-3 py-2"
             />
           </div>
@@ -30,16 +83,12 @@ const Settings = () => {
             <label className="block text-sm font-medium">Email</label>
             <input
               type="email"
-              defaultValue="john@example.com"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               className="mt-1 w-full border rounded px-3 py-2"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium">Profile Picture</label>
-            <input type="file" className="mt-1" />
-          </div>
-
           <button
             type="submit"
             className="bg-rose-600 text-white px-4 py-2 rounded hover:bg-rose-700 transition"
@@ -49,46 +98,14 @@ const Settings = () => {
         </form>
       </section>
 
-      {/* Links: Edit Profile, Privacy Policy, About Us */}
-      <section className="mb-10 max-w-lg">
-        <h2 className="text-2xl font-semibold mb-4">More Options</h2>
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => alert("Edit Profile clicked")}
-            className="text-left px-4 py-2 rounded hover:bg-rose-50 transition text-rose-700 font-medium"
-          >
-            Edit Profile
-          </button>
-          <button
-            onClick={() => alert("Privacy Policy clicked")}
-            className="text-left px-4 py-2 rounded hover:bg-rose-50 transition text-rose-700 font-medium"
-          >
-            Privacy Policy
-          </button>
-          <button
-            onClick={() => alert("About Us clicked")}
-            className="text-left px-4 py-2 rounded hover:bg-rose-50 transition text-rose-700 font-medium"
-          >
-            About Us
-          </button>
-        </div>
-      </section>
-
-      {/* Preferences with toggle icons */}
+      {/* Preferences */}
       <section className="mb-10 max-w-lg">
         <h2 className="text-2xl font-semibold mb-4">Preferences</h2>
         <div className="space-y-4">
-          {/* Enable Notifications */}
           <ToggleSwitch
             label="Enable Notifications"
             enabled={notifications}
             onToggle={() => setNotifications(!notifications)}
-          />
-          {/* Dark Mode */}
-          <ToggleSwitch
-            label="Dark Mode"
-            enabled={darkMode}
-            onToggle={() => setDarkMode(!darkMode)}
           />
         </div>
       </section>
@@ -98,7 +115,10 @@ const Settings = () => {
         <h2 className="text-2xl font-semibold mb-4 text-rose-600">
           Danger Zone
         </h2>
-        <button className="text-rose-600 border border-rose-400 px-4 py-2 rounded hover:bg-rose-50 transition">
+        <button
+          onClick={handleDelete}
+          className="text-rose-600 border border-rose-400 px-4 py-2 rounded hover:bg-rose-50 transition"
+        >
           Delete Account
         </button>
       </section>
@@ -106,7 +126,6 @@ const Settings = () => {
   );
 };
 
-// ToggleSwitch Component for preference toggles
 const ToggleSwitch = ({ label, enabled, onToggle }) => {
   return (
     <div

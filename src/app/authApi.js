@@ -33,8 +33,61 @@ export const authAPI = createApi({
         OTPCode,
       }),
     }),
+
+    // 🔁 Resend Registration OTP
+    resendRegistrationOtp: builder.mutation({
+      query: (email) => ({
+        url: "/auth/resend-registration-otp",
+        method: "POST",
+        body: { email },
+      }),
+    }),
+
+    // 🔐 Forgot Password (Send OTP)
+    forgotPassword: builder.mutation({
+      query: (email) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body: email,
+      }),
+    }),
+
+    // ✅ Verify Reset Password OTP
+    verifyResetOtp: builder.mutation({
+      query: (otpData) => ({
+        url: "/auth/verify-reset-otp",
+        method: "POST",
+        body: otpData, // { user_id, otp }
+      }),
+    }),
+
+    //  Resend Reset OTP
+    resendResetOtp: builder.mutation({
+      query: (email) => ({
+        url: "/auth/resend-reset-otp",
+        method: "POST",
+        body:  email ,
+      }),
+    }),
+
+    //  Reset Password
+    resetPassword: builder.mutation({
+      query: ({ email, otp, newPassword }) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body: { email, otp, newPassword },
+      }),
+    }),
   }),
 });
 
-export const { useLoginMutation, useSignupMutation, useVerifyOTPMutation } =
-  authAPI;
+export const {
+  useLoginMutation,
+  useSignupMutation,
+  useVerifyOTPMutation,
+  useResendRegistrationOtpMutation,
+  useForgotPasswordMutation,
+  useVerifyResetOtpMutation,
+  useResendResetOtpMutation,
+  useResetPasswordMutation,
+} = authAPI;

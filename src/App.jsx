@@ -1,50 +1,67 @@
+import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
-import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
 import Landingpage from "./pages/Landingpage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ProtectedRoutes from "./components/userProfile/ProtectedRoute";
+import AdminRoutes from "./pages/admin/AdminRoutes";
+import Users from "./pages/admin/Users";
+import Gynecologists from "./pages/admin/Gynecologists";
+import AddGynecologists from "./pages/admin/AddGynecologists";
+import MyAccount from "@/pages/MyAccount";
+import ChangePassword from "@/pages/ChangePassword";
+import Support from "@/pages/Support";
 import Insights from "./pages/Insights";
 import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
 import FullCalendarPage from "./pages/FullCalendarPage";
-import MyAccount from "@/pages/MyAccount";
-import { Toaster } from "sonner";
-import ChangePassword from "@/pages/ChangePassword";
-import Support from "@/pages/Support";
-import GynecologistsPage from "./pages/Gynecologists";
-import AddGynecologists from "./pages/admin/AddGynecologists";
-import ProtectedRoutes from "./components/userProfile/ProtectedRoute";
-import AdminRoutes from "./pages/admin/AdminRoutes";
-import  Users  from "./pages/admin/Users";
-import Gynecologists from "./pages/admin/Gynecologists";
 import SignupOTP from "./pages/SignupOTP";
+import GynecologistsPage from "./pages/Gynecologists";
+import { Toaster, toast } from "sonner";
+import { generateToken, messaging } from "./notifications/firebase";
+import { onMessage } from "firebase/messaging";
 
 
 function App() {
-  const token = Cookies.get("authToken");
-  const isAuthenticated = token;
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!Cookies.get("authToken")
+  );
+  const [userRole, setUserRole] = useState(null);
 
-  let userRole = null;
-  if (token) {
-    try {
-      const decodedToken = jwtDecode(token);
-      userRole = decodedToken.role;
-    } catch (err) {
-      console.error("Token decoding error:", err);
+  useEffect(() => {
+    generateToken();
+    onMessage(messaging, (payload) => {
+      toast(payload?.notification?.body || "New notification");
+    });
+  }, []);
+
+  useEffect(() => {
+    const token = Cookies.get("authToken");
+    if (token) {
+      try {
+        setUserRole(jwtDecode(token).role);
+      } catch (err) {
+        console.error("Token decode failed", err);
+        setUserRole(null);
+      }
+    } else {
+      setUserRole(null);
     }
-  }
+  }, [isAuthenticated]);
 
   return (
     <>
-      <Toaster richColors position="top-right" />
-
+      <Toaster richColors position="top-center" />
       <Router>
         <Routes>
           <Route
@@ -72,10 +89,13 @@ function App() {
                   <Navigate to="/dashboard" replace />
                 )
               ) : (
-                <Login />
+                <Login setIsAuthenticated={setIsAuthenticated} />
               )
             }
           />
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
           <Route
             path="/signup"
             element={
@@ -86,18 +106,17 @@ function App() {
                   <Navigate to="/dashboard" replace />
                 )
               ) : (
-                <Signup />
+                <Signup setIsAuthenticated={setIsAuthenticated} />
               )
             }
           />
 
-          <Route path="/" element={<ProtectedRoutes />}>
-            <Route
-              path="dashboard"
-              element={
-                <Dashboard user={isAuthenticated ? jwtDecode(token) : null} />
-              }
-            />
+          {/* User Protected Routes */}
+          <Route
+            path="/"
+            element={<ProtectedRoutes isAuthenticated={isAuthenticated} />}
+          >
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="calendar" element={<FullCalendarPage />} />
             <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
@@ -107,9 +126,14 @@ function App() {
             <Route path="support" element={<Support />} />
             <Route path="gynecologists" element={<GynecologistsPage />} />
             <Route path="verifyEmail" element={<SignupOTP />} />
+            
           </Route>
 
-          <Route path="/admin" element={<AdminRoutes />}>
+          {/* Admin Protected Routes */}
+          <Route
+            path="/admin"
+            element={<AdminRoutes isAuthenticated={isAuthenticated} />}
+          >
             <Route path="add-gynecologist" element={<AddGynecologists />} />
             <Route path="gynecologists" element={<Gynecologists />} />
             <Route path="users" element={<Users />} />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLoginMutation } from "../app/authApi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import {
@@ -42,7 +42,7 @@ const Login = () => {
     try {
       const response = await login(values).unwrap();
       const decodedResponse = response ? jwtDecode(response?.token) : null;
-      console.log(decodedResponse)
+      console.log(decodedResponse);
       const userId = decodedResponse?.user_id;
       dispatch(setCredentials({ user: userId, token: response?.token }));
       navigate("/dashboard");
@@ -56,11 +56,7 @@ const Login = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-accent-dark">
         {/* App Logo */}
         <div className="flex justify-center mb-2">
-          <img
-            src={logo}
-            alt="App Logo"
-            className="w-30 h-30"
-          />
+          <img src={logo} alt="App Logo" className="w-30 h-30" />
         </div>
 
         {/* Welcome Heading */}
@@ -123,7 +119,7 @@ const Login = () => {
               )}
             />
             <div className="text-sm text-primary flex justify-end">
-              Forgot Password?
+              <Link to="/forgot-password">Forgot Password?</Link>
             </div>
             {/* Error Message */}
             {loginError && (
