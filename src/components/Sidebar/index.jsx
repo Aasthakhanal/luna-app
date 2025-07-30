@@ -1,10 +1,53 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import menuItems from "./menuItems";
-import logo from '../../assets/lunaa.png'
+import logo from "../../assets/lunaa.png";
+import {
+  LayoutDashboard,
+  Calendar,
+  BotMessageSquare,
+  Settings,
+} from "lucide-react";
 
-const Sidebar = ({ isCollapsed }) => {
+const Sidebar = ({ isCollapsed, role }) => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userItems = [
+    {
+      label: "Dashboard",
+      path: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Calendar",
+      path: "/calendar",
+      icon: Calendar,
+    },
+    {
+      label: "Chatbot",
+      path: "/chatbot",
+      icon: BotMessageSquare,
+    },
+    {
+      label: "Settings",
+      path: "/settings",
+      icon: Settings,
+    },
+  ];
+
+  const adminItems = [
+    {
+      label: "Users",
+      path: "/admin/users",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Gynecologist",
+      path: "/admin/gynecologists",
+      icon: Calendar,
+    },
+  ];
+
+  const sidebarItems = role === "ADMIN" ? adminItems : userItems;
 
   return (
     <div
@@ -25,7 +68,7 @@ const Sidebar = ({ isCollapsed }) => {
       {/* Menu Items */}
       <nav className="p-4">
         <ul className="space-y-2">
-          {menuItems.map((item) => {
+          {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
 

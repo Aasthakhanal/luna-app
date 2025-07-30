@@ -1,12 +1,11 @@
-import { useNavigate, Navigate, Outlet, useLocation } from "react-router-dom";
+import { useNavigate, Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import AppLayout from "@/Layouts/AppLayout";
+import AppLayout from "../../Layouts/AppLayout";
 import { useEffect } from "react";
 
-const ProtectedRoutes = () => {
+const AdminRoutes = () => {
   const token = Cookies.get("authToken");
-  const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     if (!token) {
@@ -27,14 +26,7 @@ const ProtectedRoutes = () => {
       return <Navigate to="/login" />;
     }
 
-    const userRole = decodedToken.role;
-    const currentPath = location.pathname;
-
-    if (userRole === "ADMIN") {
-      return <Navigate to="/admin/users" replace />;
-    }
-
-    if (currentPath.startsWith("/admin")) {
+    if (decodedToken.role !== "ADMIN") {
       return <Navigate to="/" replace />;
     }
 
@@ -45,8 +37,7 @@ const ProtectedRoutes = () => {
     );
   } catch {
     Cookies.remove("authToken");
-    return <Navigate to="/login" replace />;
   }
 };
 
-export default ProtectedRoutes;
+export default AdminRoutes;
