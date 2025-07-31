@@ -13,13 +13,13 @@ importScripts(
 // your app's Firebase config object.
 // https://firebase.google.com/docs/web/setup#config-object
 firebase.initializeApp({
-  apiKey: "AIzaSyAaALSHGuxKsenO46tRpy3cbzyXYDOIxFQ",
-  authDomain: "luna-app-8cd03.firebaseapp.com",
-  projectId: "luna-app-8cd03",
-  storageBucket: "luna-app-8cd03.firebasestorage.app",
-  messagingSenderId: "652121547326",
-  appId: "1:652121547326:web:3ce0bbb9e9887db308676f",
-  measurementId: "G-SM4FG2SQE8",
+  apiKey: "AIzaSyCjO3YfudxrI1ad9RNwHFOrEgZ_0NYbBA8",
+  authDomain: "luna-d0be0.firebaseapp.com",
+  projectId: "luna-d0be0",
+  storageBucket: "luna-d0be0.firebasestorage.app",
+  messagingSenderId: "777487521208",
+  appId: "1:777487521208:web:c4a00c057ec81a54daab4d",
+  measurementId: "G-MJYPDXY7GD",
 });
 
 // Retrieve an instance of Firebase Messaging so that it can handle background

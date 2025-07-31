@@ -7,13 +7,13 @@ import { getMessaging, getToken } from "firebase/messaging";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAaALSHGuxKsenO46tRpy3cbzyXYDOIxFQ",
-  authDomain: "luna-app-8cd03.firebaseapp.com",
-  projectId: "luna-app-8cd03",
-  storageBucket: "luna-app-8cd03.firebasestorage.app",
-  messagingSenderId: "652121547326",
-  appId: "1:652121547326:web:3ce0bbb9e9887db308676f",
-  measurementId: "G-SM4FG2SQE8",
+  apiKey: "AIzaSyCjO3YfudxrI1ad9RNwHFOrEgZ_0NYbBA8",
+  authDomain: "luna-d0be0.firebaseapp.com",
+  projectId: "luna-d0be0",
+  storageBucket: "luna-d0be0.firebasestorage.app",
+  messagingSenderId: "777487521208",
+  appId: "1:777487521208:web:c4a00c057ec81a54daab4d",
+  measurementId: "G-MJYPDXY7GD",
 };
 
 // Initialize Firebase
@@ -26,7 +26,7 @@ export const generateToken = async () => {
   if (permission === "granted") {
     const token = await getToken(messaging, {
       vapidKey:
-        "BLPd6-ZYoJnfZkc5PMTqcDdqTEQwzwC6KVpTqyiRKdO2z80XwffSNRJeEispy_ntff2MAA5FAXeM6n6hcPG9Ui4",
+        "BDW9L3lhevWtfqEp2lyqTwhP9NpFNcExyGPuYsK1Bmd2ifnaGdI1SltvsedMXgv_y-qwA_7_sV_CrvdciQe2Okw",
     });
     console.log(token, "token");
   }
