@@ -9,6 +9,7 @@ import {
   useDeleteCycleMutation,
   useGetCyclesQuery,
 } from "../app/cyclesApi";
+import { useUserDailyCheckMutation } from "../app/notificationsApi";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const FullCalendarPage = () => {
 
   const [createCycle] = useCreateCycleMutation();
   const [deleteCycle] = useDeleteCycleMutation();
+  const [userDailyCheck] = useUserDailyCheckMutation();
 
   const [lastCreatedCycleId, setLastCreatedCycleId] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
@@ -209,6 +211,75 @@ const FullCalendarPage = () => {
             setLastCreatedCycleId(response.id);
             await refetch();
             toast.success("Cycle started successfully.");
+
+            // Trigger notification check after cycle creation
+            try {
+              const notificationResult = await userDailyCheck().unwrap();
+              console.log(
+                "Notification check after cycle creation:",
+                notificationResult
+              );
+
+              // Show toast notifications sequentially
+              if (
+                notificationResult.notifications &&
+                notificationResult.notifications.length > 0
+              ) {
+                notificationResult.notifications.forEach(
+                  (notification, index) => {
+                    setTimeout(() => {
+                      toast(
+                        <div className="flex items-center gap-3 p-2">
+                          <div className="relative flex-shrink-0">
+                            <img
+                              src="/luna-logo.png"
+                              alt="Luna"
+                              className="w-10 h-10 rounded-full shadow-md border-2 border-white"
+                            />
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">•</span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <div className="font-semibold text-gray-800 text-sm mb-1 truncate max-w-[200px]">
+                              {notification.title}
+                            </div>
+                            <div className="text-gray-600 text-xs leading-tight line-clamp-2 max-w-[200px]">
+                              {notification.body}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <div className="w-2 h-2 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>,
+                        {
+                          duration: 4000,
+                          position: "top-center",
+                          style: {
+                            background:
+                              "linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%)",
+                            border: "1px solid #fecaca",
+                            borderRadius: "12px",
+                            boxShadow:
+                              "0 10px 25px -5px rgba(251, 113, 133, 0.25), 0 4px 6px -2px rgba(251, 113, 133, 0.05)",
+                            width: "320px",
+                            height: "80px",
+                            minHeight: "80px",
+                            maxHeight: "80px",
+                          },
+                          className: "border-l-4 border-l-rose-400",
+                        }
+                      );
+                    }, index * 4500); // 4.5-second delay between each notification
+                  }
+                );
+              }
+            } catch (notificationError) {
+              console.error(
+                "Failed to check notifications after cycle creation:",
+                notificationError
+              );
+            }
           } catch (err) {
             console.error("Error starting cycle:", err);
             toast.error("Failed to start cycle.");

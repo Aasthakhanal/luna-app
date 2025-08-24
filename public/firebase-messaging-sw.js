@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // Give the service worker access to Firebase Messaging.
 // Note that you can only use Firebase Messaging here. Other Firebase libraries
 // are not available in the service worker.
@@ -22,8 +23,6 @@ firebase.initializeApp({
   measurementId: "G-MJYPDXY7GD",
 });
 
-// Retrieve an instance of Firebase Messaging so that it can handle background
-// messages.
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
@@ -32,12 +31,41 @@ messaging.onBackgroundMessage((payload) => {
     payload
   );
 
-  // Customize notification here
-  const notificationTitle = "payload.notification.title";
+  const notificationTitle = payload.notification.title || "Luna";
   const notificationOptions = {
-    body: "payload.notification.body",
-    icon: "payload.notification.image",
+    body: payload.notification.body,
+    icon: payload.notification.image || "/luna-logo.png", // Use Luna logo as default
+    badge: "/luna-logo.png", // Small icon in notification badge
+    image: payload.notification.image, // Large image if provided
+    tag: "luna-notification", // Group notifications
+    requireInteraction: false, // Auto-dismiss after timeout
+    actions: [
+      {
+        action: "open",
+        title: "Open App",
+        icon: "/luna-logo.png",
+      },
+    ],
+    data: {
+      url: payload.notification.click_action || "/",
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Handle notification clicks
+self.addEventListener("notificationclick", (event) => {
+  console.log("[firebase-messaging-sw.js] Notification click received.");
+
+  event.notification.close();
+
+  // Handle action button clicks
+  if (event.action === "open") {
+    // Open the app
+    event.waitUntil(clients.openWindow(event.notification.data.url || "/"));
+  } else {
+    // Default click behavior - open the app
+    event.waitUntil(clients.openWindow(event.notification.data.url || "/"));
+  }
 });

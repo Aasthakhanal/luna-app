@@ -5,26 +5,30 @@ import {
   useUpdateUserMutation,
   useDeleteUserMutation,
 } from "@/app/userApi";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { logout } from "@/features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const userId = useSelector((state) => state.auth.users?.id); 
+  const userId = useSelector((state) => state.auth.user);
   const { data: user, isLoading } = useFindUserQuery(userId);
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser] = useDeleteUserMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    full_name: "",
+    name: "",
     email: "",
   });
 
-  const [notifications, setNotifications] = useState(true); 
+  const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
     if (user) {
       setFormData({
-        full_name: user.full_name || "",
+        name: user.name || "",
         email: user.email || "",
       });
     }
@@ -39,7 +43,7 @@ const Settings = () => {
     try {
       await updateUser({ id: userId, ...formData }).unwrap();
       toast.success("User updated successfully");
-    } catch (err) {
+    } catch {
       toast.error("Failed to update user");
     }
   };
@@ -47,9 +51,10 @@ const Settings = () => {
   const handleDelete = async () => {
     try {
       await deleteUser(userId).unwrap();
+      dispatch(logout());
       toast.success("Account deleted");
-      // Redirect or logout here
-    } catch (err) {
+      navigate("/");
+    } catch {
       toast.error("Failed to delete account");
     }
   };
@@ -72,8 +77,8 @@ const Settings = () => {
             <label className="block text-sm font-medium">Full Name</label>
             <input
               type="text"
-              name="full_name"
-              value={formData.full_name}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               className="mt-1 w-full border rounded px-3 py-2"
             />

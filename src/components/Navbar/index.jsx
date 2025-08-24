@@ -1,5 +1,6 @@
 import { Search, Bell, Menu } from "lucide-react";
 import UserProfile from "../UserProfile";
+import NotificationDropdown from "../NotificationDropdown";
 
 const Navbar = ({ user, toggleSidebar, setIsAuthenticated }) => {
   return (
@@ -15,10 +16,7 @@ const Navbar = ({ user, toggleSidebar, setIsAuthenticated }) => {
 
       <div className="flex items-center space-x-6">
         {/* Notifications */}
-        {/* <button className="relative p-2 hover:bg-accent rounded-full">
-          <Bell className="h-5 w-5 text-neutral" />
-          <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full"></span>
-        </button> */}
+        <NotificationDropdown />
 
         {/* User Profile */}
         <UserProfile user={user} setIsAuthenticated={setIsAuthenticated} />

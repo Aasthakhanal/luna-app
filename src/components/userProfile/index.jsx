@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { UserCheck, LockKeyholeOpen, Headphones, LogOut } from "lucide-react";
 import { logout } from "@/features/auth/authSlice";
 
-const UserProfile = ({ user, setIsAuthenticated }) => {
+const UserProfile = ({ user }) => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -21,8 +21,7 @@ const UserProfile = ({ user, setIsAuthenticated }) => {
   const handleLogout = () => {
     dispatch(logout());
     localStorage.clear();
-    // setIsAuthenticated(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (

@@ -1,21 +1,15 @@
-import { useNavigate, Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import AppLayout from "@/Layouts/AppLayout";
-import { useEffect } from "react";
+import Login from "@/pages/Login";
 
 const ProtectedRoutes = () => {
   const token = Cookies.get("authToken");
   const location = useLocation();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
-  }, [token, navigate]);
 
   if (!token) {
-    return null;
+    return <Login />;
   }
 
   try {
@@ -24,7 +18,7 @@ const ProtectedRoutes = () => {
 
     if (decodedToken.exp < currentTime) {
       Cookies.remove("authToken");
-      return <Navigate to="/login" />;
+      return <Login />;
     }
 
     const userRole = decodedToken.role;
@@ -45,7 +39,7 @@ const ProtectedRoutes = () => {
     );
   } catch {
     Cookies.remove("authToken");
-    return <Navigate to="/login" replace />;
+    return <Login />;
   }
 };
 
