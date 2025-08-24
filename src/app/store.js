@@ -6,6 +6,8 @@ import { periodDaysApi } from "./periodDaysApi";
 import { cyclesApi } from "./cyclesApi";
 import { irregularitiesApi } from "./irregularitiesApi";
 import { gynecologistsApi } from "./gynecologistsApi";
+import { chatbotApi } from "./chatbotApi";
+import { notificationsAPI } from "./notificationsApi";
 
 const rootReducer = {
   [authAPI.reducerPath]: authAPI.reducer,
@@ -14,6 +16,9 @@ const rootReducer = {
   [cyclesApi.reducerPath]: cyclesApi.reducer,
   [irregularitiesApi.reducerPath]: irregularitiesApi.reducer,
   [gynecologistsApi.reducerPath]: gynecologistsApi.reducer,
+  [chatbotApi.reducerPath]: chatbotApi.reducer,
+  [notificationsAPI.reducerPath]: notificationsAPI.reducer,
+  auth: authReducer,
   auth: authReducer,
 };
 
@@ -24,6 +29,9 @@ const apiMiddlewares = [
   cyclesApi.middleware,
   irregularitiesApi.middleware,
   gynecologistsApi.middleware,
+  chatbotApi.middleware,
+  notificationsAPI.middleware,
+
 ]; 
 
 export const store = configureStore({

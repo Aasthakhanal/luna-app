@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send } from "lucide-react"; // Import the Send icon
-
+import { useSendMessageMutation } from "@/app/chatbotApi";
 
 const Chatbot = () => {
   // State to store chat messages
@@ -11,6 +11,8 @@ const Chatbot = () => {
   const [loading, setLoading] = useState(false);
   // Ref for scrolling to the latest message
   const messagesEndRef = useRef(null);
+
+  const [sendMessage] = useSendMessageMutation();
 
   // Disclaimer message content (will be displayed at the bottom)
   const medicalDisclaimerContent =
@@ -83,159 +85,6 @@ const Chatbot = () => {
     return <div dangerouslySetInnerHTML={{ __html: htmlText }} />;
   };
 
-  // Function to send message to Google Gemini API
-  const sendMessageToGemini = async (userMessage) => {
-    setLoading(true); // Show loading indicator
-    // Add user message to chat history immediately
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { sender: "user", text: userMessage },
-    ]);
-    setInput(""); // Clear input field
-
-    const lowerCaseUserMessage = userMessage.toLowerCase().trim();
-    // Define a set of casual greetings to be handled directly
-    const casualGreetings = [
-      "hello",
-      "hi",
-      "hey",
-      "how are you?",
-      "what's up",
-      "good morning",
-      "good afternoon",
-      "good evening",
-    ];
-
-    // --- Handle casual greetings directly without calling Gemini API ---
-    if (casualGreetings.includes(lowerCaseUserMessage)) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          sender: "gemini",
-          text: "Hello there! How can I help you with your period questions today?",
-        },
-      ]);
-      setLoading(false); // Hide loading after direct response
-      return; // Exit function early
-    }
-
-    try {
-      // Prepare chat history for Gemini API
-      let chatHistory = messages
-        .filter((msg) => msg.sender === "user" || msg.sender === "gemini")
-        .map((msg) => ({
-          role: msg.sender === "user" ? "user" : "model",
-          parts: [{ text: msg.text }],
-        }));
-      chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
-
-      // Define the system instruction to guide Gemini's behavior
-      const systemInstruction =
-        "You are a helpful chatbot for a period tracking website. Your primary function is to answer questions related to menstrual cycles, period symptoms, and general reproductive health topics. If a question is clearly outside the scope of menstrual or reproductive health, politely state that you can only provide information on period-related topics and encourage them to ask a relevant question. All responses should be informative and use Markdown formatting for readability, including **bold text**, *bullet points for lists*, and proper paragraph breaks. Please answer briefly.";
-
-      const payload = {
-        contents: chatHistory,
-        generationConfig: {
-          maxOutputTokens: 100, // Reduced limit again for more concise answers
-        },
-        systemInstruction: {
-          parts: [{ text: systemInstruction }],
-        },
-      };
-
-      // API key is intentionally left empty, Canvas will provide it at runtime.
-      const apiKey = "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (
-        result.candidates &&
-        result.candidates.length > 0 &&
-        result.candidates[0].content
-      ) {
-        const candidateContent = result.candidates[0].content;
-        const geminiText =
-          candidateContent.parts &&
-          candidateContent.parts.length > 0 &&
-          candidateContent.parts[0].text
-            ? candidateContent.parts[0].text.trim()
-            : null;
-
-        if (geminiText) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { sender: "gemini", text: geminiText },
-          ]);
-        } else {
-          const finishReason = result.candidates[0].finishReason;
-          if (finishReason === "MAX_TOKENS") {
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              {
-                sender: "system",
-                text: "I couldn't provide a complete brief response. Could you try rephrasing your question or asking for specific details?",
-              },
-            ]);
-          } else if (
-            finishReason === "SAFETY" ||
-            finishReason === "RECITATION" ||
-            finishReason === "OTHER"
-          ) {
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              {
-                sender: "system",
-                text: "I can only answer questions related to your period or menstrual health. Please ask a relevant question.",
-              },
-            ]);
-          } else {
-            console.error(
-              "Gemini API response structure is unexpected or empty text parts for non-greeting:",
-              result
-            );
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              {
-                sender: "system",
-                text: "Sorry, I couldn't get a response. Please try again.",
-              },
-            ]);
-          }
-        }
-      } else {
-        console.error(
-          "Gemini API response is empty or has no candidates:",
-          result
-        );
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            sender: "system",
-            text: "Sorry, I couldn't get a response from Gemini. Please try again.",
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          sender: "system",
-          text: "An error occurred while connecting to the chatbot. Please check your network and try again.",
-        },
-      ]);
-    } finally {
-      setLoading(false); // Hide loading indicator
-    }
-  };
-
   // Removed generateAffirmation function as requested
 
   // Handle sending message when the Send button is clicked or Enter is pressed
@@ -248,6 +97,46 @@ const Chatbot = () => {
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSendMessage();
+    }
+  };
+
+  // Function to send message to NestJS backend (which calls Gemini securely)
+  const sendMessageToGemini = async (userMessage) => {
+    setLoading(true);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "user", text: userMessage },
+    ]);
+    setInput("");
+
+    try {
+      const sendMsg = await sendMessage( messages ).unwrap();
+      console.log(sendMsg, "sendMsg");
+      
+
+      if (result.reply) {
+        // Backend sends cleaned reply
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { sender: "gemini", text: result.reply },
+        ]);
+      } else {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { sender: "system", text: "Sorry, I couldn’t get a valid reply." },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error calling chatbot API:", error);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          sender: "system",
+          text: "An error occurred while connecting to the chatbot.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 

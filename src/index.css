@@ -60,7 +60,7 @@
   --ovulation-foreground: <color>;
   --fertile: <color>;
   --fertile-foreground: <color>;
-  --color-soft-pink: #FADADD;
+  --color-soft-pink: #fadadd;
   --color-peach: #edeae5;
   --color-lavender: #ececfa;
 }
@@ -164,5 +164,15 @@ button {
 }
 
 .fc .fc-button-primary {
-  @apply border-none shadow-sm ;
+  @apply border-none shadow-sm;
+}
+
+/* Line clamp utility for text truncation */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

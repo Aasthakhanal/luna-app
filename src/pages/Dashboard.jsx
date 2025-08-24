@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useMemo } from "react";
 import {
   Card,
@@ -42,8 +43,6 @@ export function Dashboard({ user }) {
     page: 1,
     limit: 1000,
   });
-
-  console.log("Cycle Response:", cycleResponse);
 
   const cycles = cycleResponse.data;
 
@@ -92,15 +91,12 @@ export function Dashboard({ user }) {
     limit: 100,
     cycle_id: latestCycle?.id || null,
   });
-  console.log("irregularities", irregularitiesData);
 
   const { data: periodDaysData } = useGetPeriodDaysQuery({
     page: 1,
     limit: 100,
     cycle_id: selectedCycle?.id || null,
   });
-
-  console.log("period days", periodDaysData);
 
   const [cycleData, setCycleData] = useState({
     averageCycleLength: avgCycleLength,
@@ -157,8 +153,7 @@ export function Dashboard({ user }) {
     latestCycle?.predicted_end_date,
     new Date()
   );
-  console.log("daysUntilNextPeriod", daysUntilNextPeriod);
-  console.log("latestCycle", latestCycle);
+
   const cycleProgress =
     (cycleData.dayOfCycle / cycleData.averageCycleLength) * 100;
 
@@ -194,7 +189,6 @@ export function Dashboard({ user }) {
 
   lineData.pop();
 
-  console.log("Raw periodDaysData", periodDaysData);
   const flowWeights = {
     spotting: 1,
     light: 2,
@@ -229,8 +223,6 @@ export function Dashboard({ user }) {
       .filter((item) => item.flow > 0);
   }, [periodDaysData]);
 
-  console.log("bar data", barData);
-
   const showGraphs = lineData.length >= 3;
   const isMenstrualPhase = cycleData.currentPhase === "menstrual";
 
@@ -241,10 +233,10 @@ export function Dashboard({ user }) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="max-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        {!latestCycle ? (
-          <div className="min-h-screen w-full bg-rose-50 flex flex-col md:flex-row items-center justify-center px-6 py-16 gap-10 overflow-hidden">
+        {!cycles ? (
+          <div className="max-h-screen w-full bg-rose-50 flex flex-col md:flex-row items-center justify-center px-6 py-16 gap-10 overflow-hidden">
             {/* LEFT IMAGE with FADE IN */}
             <motion.div
               className="hidden md:flex md:w-1/2 justify-center"
@@ -356,7 +348,7 @@ export function Dashboard({ user }) {
               <Card className="bg-red-50 text-gray-700 shadow-md">
                 <CardHeader className="pb-0">
                   <CardTitle>Irregularity Detected ⚠️</CardTitle>
-                  <p>{irregularitiesData?.data[0].irregularity_type}</p>
+                  <p>{irregularitiesData?.data[0]?.irregularity_type}</p>
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between  items-center mb-2">
@@ -386,11 +378,10 @@ export function Dashboard({ user }) {
                           //  if(confirm(
                           //    "Allow the system to access your location to find nearby gynecologists?"
                           //  ))
-                            {
-
-                           navigate("/gynecologists");
-                           }
-                           return ;
+                          {
+                            navigate("/gynecologists");
+                          }
+                          return;
                         }}
                       >
                         Find Gynecologists Near You
