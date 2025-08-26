@@ -24,11 +24,6 @@ const Sidebar = ({ isCollapsed, role }) => {
       icon: Calendar,
     },
     {
-      label: "Notifications",
-      path: "/notifications",
-      icon: Bell,
-    },
-    {
       label: "Chatbot",
       path: "/chatbot",
       icon: BotMessageSquare,

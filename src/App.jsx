@@ -25,7 +25,6 @@ import Settings from "./pages/Settings";
 import FullCalendarPage from "./pages/FullCalendarPage";
 import SignupOTP from "./pages/SignupOTP";
 import GynecologistsPage from "./pages/Gynecologists";
-import Notifications from "./components/NotificationDropdown/index";
 import { Toaster, toast } from "sonner";
 import { generateToken, messaging } from "./notifications/firebase";
 import { onMessage } from "firebase/messaging";
@@ -79,11 +78,6 @@ function App() {
                     toast(
                       <div className="flex items-center gap-3 p-3 w-full max-w-sm">
                         <div className="relative flex-shrink-0">
-                          <img
-                            src="/luna-logo.png"
-                            alt="Luna"
-                            className="w-10 h-10 rounded-full shadow-md border-2 border-white"
-                          />
                           <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">•</span>
                           </div>
@@ -130,11 +124,6 @@ function App() {
             toast(
               <div className="flex items-center gap-3 p-3 w-full max-w-sm">
                 <div className="relative flex-shrink-0">
-                  <img
-                    src="/luna-logo.png"
-                    alt="Luna"
-                    className="w-10 h-10 rounded-full shadow-md border-2 border-white"
-                  />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">🔔</span>
                   </div>
@@ -243,7 +232,6 @@ function App() {
             <Route path="calendar" element={<FullCalendarPage />} />
             <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
-            <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<Settings />} />
             <Route path="my-account" element={<MyAccount />} />
             <Route path="support" element={<Support />} />
