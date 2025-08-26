@@ -63,17 +63,6 @@ const UserProfile = ({ user }) => {
         <nav className="mt-6 flex flex-col gap-4 text-gray-700 text-base">
           <button
             onClick={() => {
-              navigate("/my-account");
-              setOpen(false);
-            }}
-            className="w-full text-left px-4 py-2 rounded hover:bg-pink-50 transition flex items-center gap-2"
-          >
-            <UserCheck className="h-4 w-4" />
-            My Account
-          </button>
-
-          <button
-            onClick={() => {
               navigate("/change-password");
               setOpen(false);
             }}
@@ -82,7 +71,6 @@ const UserProfile = ({ user }) => {
             <LockKeyholeOpen className="h-4 w-4" />
             Change Password
           </button>
-
           <button
             onClick={() => {
               navigate("/support");

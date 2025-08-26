@@ -17,7 +17,6 @@ import AdminRoutes from "./pages/admin/AdminRoutes";
 import Users from "./pages/admin/Users";
 import Gynecologists from "./pages/admin/Gynecologists";
 import AddGynecologists from "./pages/admin/AddGynecologists";
-import MyAccount from "@/pages/MyAccount";
 import Support from "@/pages/Support";
 import Insights from "./pages/Insights";
 import Chatbot from "./pages/Chatbot";
@@ -233,7 +232,6 @@ function App() {
             <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="my-account" element={<MyAccount />} />
             <Route path="support" element={<Support />} />
             <Route path="gynecologists" element={<GynecologistsPage />} />
             <Route path="verifyEmail" element={<SignupOTP />} />
