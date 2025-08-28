@@ -5,7 +5,6 @@ import {
   Calendar,
   BotMessageSquare,
   Settings,
-  Bell,
 } from "lucide-react";
 
 const Sidebar = ({ isCollapsed, role }) => {

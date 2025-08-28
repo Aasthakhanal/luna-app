@@ -17,8 +17,6 @@ import AdminRoutes from "./pages/admin/AdminRoutes";
 import Users from "./pages/admin/Users";
 import Gynecologists from "./pages/admin/Gynecologists";
 import AddGynecologists from "./pages/admin/AddGynecologists";
-import Support from "@/pages/Support";
-import Insights from "./pages/Insights";
 import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
 import FullCalendarPage from "./pages/FullCalendarPage";
@@ -77,6 +75,11 @@ function App() {
                     toast(
                       <div className="flex items-center gap-3 p-3 w-full max-w-sm">
                         <div className="relative flex-shrink-0">
+                          <img
+                            src="/luna-logo.png"
+                            alt="Luna"
+                            className="w-10 h-10 rounded-full shadow-md border-2 border-white"
+                          />
                           <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">•</span>
                           </div>
@@ -123,6 +126,11 @@ function App() {
             toast(
               <div className="flex items-center gap-3 p-3 w-full max-w-sm">
                 <div className="relative flex-shrink-0">
+                  <img
+                    src="/luna-logo.png"
+                    alt="Luna"
+                    className="w-10 h-10 rounded-full shadow-md border-2 border-white"
+                  />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">🔔</span>
                   </div>
@@ -205,7 +213,7 @@ function App() {
             }
           />
 
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ForgotPasswordPage />} />
 
           <Route
             path="/signup"
@@ -229,10 +237,8 @@ function App() {
           >
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="calendar" element={<FullCalendarPage />} />
-            <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="support" element={<Support />} />
             <Route path="gynecologists" element={<GynecologistsPage />} />
             <Route path="verifyEmail" element={<SignupOTP />} />
           </Route>

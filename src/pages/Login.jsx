@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setCredentials } from "../features/auth/authSlice";
 import { jwtDecode } from "jwt-decode";
 import logo from "../assets/lunaa.png";
@@ -35,8 +35,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const [login, { data, isSuccess, isLoading, error: loginError }] =
-    useLoginMutation();
+  const [login, { isLoading, error: loginError }] = useLoginMutation();
 
   const handleLogin = async (values) => {
     try {
@@ -119,7 +118,7 @@ const Login = () => {
               )}
             />
             <div className="text-sm text-primary flex justify-end">
-              <Link to="/forgot-password">Forgot Password?</Link>
+              <Link to="/reset-password">Forgot Password?</Link>
             </div>
             {/* Error Message */}
             {loginError && (

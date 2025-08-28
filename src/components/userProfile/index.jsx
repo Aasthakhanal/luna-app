@@ -61,27 +61,6 @@ const UserProfile = ({ user }) => {
         </SheetHeader>
 
         <nav className="mt-6 flex flex-col gap-4 text-gray-700 text-base">
-          <button
-            onClick={() => {
-              navigate("/change-password");
-              setOpen(false);
-            }}
-            className="w-full text-left px-4 py-2 rounded hover:bg-pink-50 transition flex items-center gap-2"
-          >
-            <LockKeyholeOpen className="h-4 w-4" />
-            Change Password
-          </button>
-          <button
-            onClick={() => {
-              navigate("/support");
-              setOpen(false);
-            }}
-            className="w-full text-left px-4 py-2 rounded hover:bg-pink-50 transition flex items-center gap-2"
-          >
-            <Headphones className="h-4 w-4" />
-            Support
-          </button>
-
           <hr className="my-4 border-pink-200" />
 
           <button

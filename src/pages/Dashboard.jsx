@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import pic from "../assets/pic2.avif";
 import { motion } from "framer-motion";
-import GynecologistsPage from "./Gynecologists";
+import { parseISO, startOfDay, differenceInCalendarDays } from "date-fns";
 
 export function Dashboard({ user }) {
   const avgCycleLength = user?.avg_cycle_length || 28;
@@ -161,31 +161,50 @@ export function Dashboard({ user }) {
   // 🎯 Real chart data building
   // ============================
 
-  const lineData = cycles
+  const sorted = [...cycles]
     .filter((c) => c.start_date)
     .sort(
       (a, b) =>
         new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-    )
-    .map((cycle) => {
-      const start = new Date(cycle.start_date);
+    );
 
-      let length;
-      if (cycle.end_date) {
-        const end = new Date(cycle.end_date);
-        length = differenceInDays(end, start) + 1;
-      } else {
-        length = avgCycleLength;
-      }
-      const day = start.getDate();
-      const month = start.getMonth() + 1;
+  const lineData = sorted.slice(0, -1).map((cycle, i) => {
+    const start = startOfDay(parseISO(cycle.start_date));
+    const nextStart = startOfDay(parseISO(sorted[i + 1].start_date));
+    const length = differenceInCalendarDays(nextStart, start); // full days between starts
 
-      return {
-        shortDate: `${month}/${day}`,
-        fullDate: start.toDateString(),
-        length,
-      };
-    });
+    return {
+      shortDate: format(start, "M/d"),
+      fullDate: format(start, "PPPP"),
+      length,
+    };
+  });
+
+  // const lineData = cycles
+  //   .filter((c) => c.start_date)
+  //   .sort(
+  //     (a, b) =>
+  //       new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+  //   )
+  //   .map((cycle) => {
+  //     const start = new Date(cycle.start_date);
+
+  //     let length;
+  //     if (cycle.end_date) {
+  //       const end = new Date(cycle.end_date);
+  //       length = differenceInDays(end, start) + 1;
+  //     } else {
+  //       length = avgCycleLength;
+  //     }
+  //     const day = start.getDate();
+  //     const month = start.getMonth() + 1;
+
+  //     return {
+  //       shortDate: `${month}/${day}`,
+  //       fullDate: start.toDateString(),
+  //       length,
+  //     };
+  //   });
 
   lineData.pop();
 
@@ -223,7 +242,7 @@ export function Dashboard({ user }) {
       .filter((item) => item.flow > 0);
   }, [periodDaysData]);
 
-  const showGraphs = lineData.length >= 3;
+  const showGraphs = lineData.length >= 0;
   const isMenstrualPhase = cycleData.currentPhase === "menstrual";
 
   const navigate = useNavigate();
@@ -235,7 +254,7 @@ export function Dashboard({ user }) {
   return (
     <div className="max-h-screen bg-white">
       <main className="container mx-auto px-4 py-8">
-        {!cycles ? (
+        {cycles.length === 0 ? (
           <div className="max-h-screen w-full bg-rose-50 flex flex-col md:flex-row items-center justify-center px-6 py-16 gap-10 overflow-hidden">
             {/* LEFT IMAGE with FADE IN */}
             <motion.div

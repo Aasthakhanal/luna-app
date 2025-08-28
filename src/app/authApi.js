@@ -48,7 +48,7 @@ export const authAPI = createApi({
       query: (email) => ({
         url: "/auth/forgot-password",
         method: "POST",
-        body: email,
+        body: { email },
       }),
     }),
 
@@ -66,7 +66,7 @@ export const authAPI = createApi({
       query: (email) => ({
         url: "/auth/resend-reset-otp",
         method: "POST",
-        body:  email ,
+        body: { email },
       }),
     }),
 
