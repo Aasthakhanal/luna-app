@@ -10,10 +10,10 @@ export const chatbotApi = createApi({
   }),
   endpoints: (builder) => ({
     sendMessage: builder.mutation({
-      query: (message) => ({
-        url: "chatbot",
+      query: (messages) => ({
+        url: "chatbot/send",
         method: "POST",
-        body: { message },
+        body: { messages },
       }),
     }),
   }),

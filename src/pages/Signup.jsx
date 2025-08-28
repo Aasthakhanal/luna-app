@@ -20,7 +20,6 @@ import { jwtDecode } from "jwt-decode";
 import logo from "../assets/lunaa.png";
 import { useNavigate } from "react-router-dom";
 
-
 const signupFormSchema = z
   .object({
     name: z.string(),
@@ -177,7 +176,7 @@ const Signup = () => {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff /> : <Eye />}
+                        {showPassword ? <Eye /> : <EyeOff />}
                       </Button>
                     </div>
                   </FormControl>
@@ -207,7 +206,7 @@ const Signup = () => {
                           setShowConfirmPassword(!showConfirmPassword)
                         }
                       >
-                        {showConfirmPassword ? <EyeOff /> : <Eye />}
+                        {showConfirmPassword ? <Eye /> : <EyeOff />}
                       </Button>
                     </div>
                   </FormControl>
@@ -222,7 +221,6 @@ const Signup = () => {
             {/* Sign Up Button */}
             <Button disabled={isLoading} className="w-full text-white">
               {isLoading ? "Creating Account..." : "Create Account"}
-             
             </Button>
           </form>
         </Form>

@@ -18,12 +18,6 @@ const Chatbot = () => {
   const medicalDisclaimerContent =
     "Medical Disclaimer: This chatbot provides general information about menstrual health and should not replace professional medical advice. Always consult with a healthcare provider for personalized medical guidance.";
 
-  // Initial greeting message for the chatbot
-  const initialChatbotGreeting = {
-    sender: "gemini", // This message is from the chatbot
-    text: "Hi User! I'm Luna. I can help answer questions about menstrual cycles, symptoms, and tracking. What would you like to know?",
-  };
-
   // Predefined quick questions
   const quickQuestions = [
     "What are the phases of menstrual cycle?",
@@ -37,7 +31,11 @@ const Chatbot = () => {
   // Effect to add initial greeting and scroll to bottom on mount
   useEffect(() => {
     // Add the initial greeting message when the component mounts
-    setMessages([initialChatbotGreeting]);
+    const initialGreeting = {
+      sender: "gemini",
+      text: "👋 **Hello! I'm Luna, your period tracking assistant!**\n\nI'm here to help you with:\n• 🩸 **Menstrual cycle questions**\n• 📅 **Period tracking tips**\n• 💊 **Symptom management**\n• 🏥 **When to see a doctor**\n\nWhat would you like to know about your menstrual health today?",
+    };
+    setMessages([initialGreeting]);
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []); // Empty dependency array ensures this runs only once on mount
 
@@ -103,16 +101,20 @@ const Chatbot = () => {
   // Function to send message to NestJS backend (which calls Gemini securely)
   const sendMessageToGemini = async (userMessage) => {
     setLoading(true);
-    setMessages((prevMessages) => [
-      ...prevMessages,
+
+    // Create the updated messages array with the new user message
+    const updatedMessages = [
+      ...messages,
       { sender: "user", text: userMessage },
-    ]);
+    ];
+
+    // Update the UI immediately
+    setMessages(updatedMessages);
     setInput("");
 
     try {
-      const sendMsg = await sendMessage( messages ).unwrap();
-      console.log(sendMsg, "sendMsg");
-      
+      const result = await sendMessage(updatedMessages).unwrap();
+      console.log(result, "sendMsg result");
 
       if (result.reply) {
         // Backend sends cleaned reply

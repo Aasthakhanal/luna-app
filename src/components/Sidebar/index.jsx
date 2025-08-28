@@ -5,7 +5,6 @@ import {
   Calendar,
   BotMessageSquare,
   Settings,
-  Bell,
 } from "lucide-react";
 
 const Sidebar = ({ isCollapsed, role }) => {
@@ -22,11 +21,6 @@ const Sidebar = ({ isCollapsed, role }) => {
       label: "Calendar",
       path: "/calendar",
       icon: Calendar,
-    },
-    {
-      label: "Notifications",
-      path: "/notifications",
-      icon: Bell,
     },
     {
       label: "Chatbot",

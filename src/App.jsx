@@ -17,15 +17,11 @@ import AdminRoutes from "./pages/admin/AdminRoutes";
 import Users from "./pages/admin/Users";
 import Gynecologists from "./pages/admin/Gynecologists";
 import AddGynecologists from "./pages/admin/AddGynecologists";
-import MyAccount from "@/pages/MyAccount";
-import Support from "@/pages/Support";
-import Insights from "./pages/Insights";
 import Chatbot from "./pages/Chatbot";
 import Settings from "./pages/Settings";
 import FullCalendarPage from "./pages/FullCalendarPage";
 import SignupOTP from "./pages/SignupOTP";
 import GynecologistsPage from "./pages/Gynecologists";
-import Notifications from "./components/NotificationDropdown/index";
 import { Toaster, toast } from "sonner";
 import { generateToken, messaging } from "./notifications/firebase";
 import { onMessage } from "firebase/messaging";
@@ -217,7 +213,7 @@ function App() {
             }
           />
 
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ForgotPasswordPage />} />
 
           <Route
             path="/signup"
@@ -241,12 +237,8 @@ function App() {
           >
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="calendar" element={<FullCalendarPage />} />
-            <Route path="insights" element={<Insights />} />
             <Route path="chatbot" element={<Chatbot />} />
-            <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="my-account" element={<MyAccount />} />
-            <Route path="support" element={<Support />} />
             <Route path="gynecologists" element={<GynecologistsPage />} />
             <Route path="verifyEmail" element={<SignupOTP />} />
           </Route>

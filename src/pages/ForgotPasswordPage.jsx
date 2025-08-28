@@ -1,150 +1,423 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useForgotPasswordMutation,
   useVerifyResetOtpMutation,
-  useResetPasswordMutation,
   useResendResetOtpMutation,
+  useResetPasswordMutation,
 } from "../app/authApi";
-import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, Mail, Lock, KeyRound, CheckCircle } from "lucide-react";
+import logo from "../assets/lunaa.png";
+import { toast } from "sonner";
 
-export default function ForgotPasswordPage() {
-  const [step, setStep] = useState("email");
+const emailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+const otpSchema = z.object({
+  otp: z.string().length(6, "OTP must be 6 digits"),
+});
+
+const passwordSchema = z.object({
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
+});
+
+const ForgotPasswordPage = () => {
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [timer, setTimer] = useState(60);
+  const [userId, setUserId] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [showPassword, setShowPassword] = useState(false);
+  const [redirectTimer, setRedirectTimer] = useState(5);
 
-  const [forgotPassword, { isLoading: sendingOtp }] =
+  const [forgotPassword, { isLoading: isEmailLoading }] =
     useForgotPasswordMutation();
-  const [verifyOtp, { isLoading: verifying }] = useVerifyResetOtpMutation();
-  const [resetPassword, { isLoading: resetting }] = useResetPasswordMutation();
-  const [resendOtp, { isLoading: resending }] = useResendResetOtpMutation();
+  const [verifyOtp, { isLoading: isOtpLoading }] = useVerifyResetOtpMutation();
+  const [resendOtp, { isLoading: isResendLoading }] =
+    useResendResetOtpMutation();
+  const [resetPassword, { isLoading: isResetLoading }] =
+    useResetPasswordMutation();
 
-  // Countdown timer logic
+  const emailForm = useForm({
+    resolver: zodResolver(emailSchema),
+  });
+
+  const otpForm = useForm({
+    resolver: zodResolver(otpSchema),
+  });
+
+  const passwordForm = useForm({
+    resolver: zodResolver(passwordSchema),
+  });
+
+  // Timer logic
   useEffect(() => {
-    let interval;
-    if (step === "otp" && timer > 0) {
-      interval = setInterval(() => setTimer((t) => t - 1), 1000);
-    }
+    if (step !== 2 || timeLeft === 0) return;
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
     return () => clearInterval(interval);
-  }, [step, timer]);
+  }, [step, timeLeft]);
 
-  const handleSendOtp = async () => {
+  // Redirect timer after password reset success
+  useEffect(() => {
+    if (step === 4 && redirectTimer > 0) {
+      const interval = setInterval(() => {
+        setRedirectTimer((prev) => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else if (step === 4 && redirectTimer === 0) {
+      navigate("/login");
+    }
+  }, [step, redirectTimer, navigate]);
+
+  // Send Forgot Password
+  const handleForgotPassword = async (values) => {
     try {
-      await forgotPassword({ email }).unwrap();
-      setStep("otp");
-      setTimer(60);
+      const res = await forgotPassword(values.email).unwrap();
+      toast.success(res.message);
+      setEmail(values.email);
+      setUserId(res.user_id);
+      setTimeLeft(60);
+      setStep(2);
     } catch (err) {
-      alert("Failed to send OTP");
+      toast.error(err.data?.message || "Something went wrong");
     }
   };
 
-  const handleVerifyOtp = async () => {
+  // Verify OTP
+  const handleVerifyOtp = async (values) => {
     try {
-      await verifyOtp({ email, otp }).unwrap();
-      setStep("password");
+      const res = await verifyOtp({
+        user_id: userId,
+        otp: values.otp,
+      }).unwrap();
+      toast.success(res.message);
+      setStep(3);
     } catch (err) {
-      alert("Incorrect OTP");
+      toast.error(err.data?.message || "Invalid OTP");
     }
   };
 
-  const handleResetPassword = async () => {
+  // Resend OTP
+  const handleResendOtp = async () => {
     try {
-      await resetPassword({ email, password: newPassword }).unwrap();
-      alert("Password reset successful!");
-      // redirect to login if needed
+      const res = await resendOtp(email).unwrap();
+      toast.success(res.message);
+      setTimeLeft(60);
     } catch (err) {
-      alert("Failed to reset password");
+      toast.error(err.data?.message || "Resend failed");
     }
   };
 
-  const handleResend = async () => {
+  // Reset Password
+  const handleResetPassword = async (values) => {
     try {
-      await resendOtp({ email }).unwrap();
-      setTimer(60);
+      const otpValue = otpForm.getValues("otp");
+      const res = await resetPassword({
+        email,
+        otp: otpValue,
+        newPassword: values.newPassword,
+      }).unwrap();
+      toast.success(res.message);
+      setStep(4);
+      setRedirectTimer(5); // Start 5-second countdown
     } catch (err) {
-      alert("Failed to resend OTP");
+      toast.error(err.data?.message || "Reset failed");
     }
   };
 
-  return (
-    <div className="max-w-md mx-auto mt-20 px-8 py-10 bg-white border border-gray-200 rounded-2xl shadow-lg space-y-6">
-      <h2 className="text-3xl font-semibold text-center text-primary tracking-tight">
-        Forgot Password
-      </h2>
-
-      {step === "email" && (
-        <>
-          <Input
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Button onClick={handleSendOtp} disabled={sendingOtp || !email}>
-            {sendingOtp ? "Sending OTP..." : "Send OTP"}
-          </Button>
-        </>
-      )}
-
-      {step === "otp" && (
-        <>
-          <InputOTP
-            maxLength={6}
-            value={otp}
-            onChange={(value) => setOtp(value)}
-          >
-            <InputOTPGroup>
-              {[...Array(6)].map((_, index) => (
-                <InputOTPSlot key={index} index={index} />
-              ))}
-            </InputOTPGroup>
-          </InputOTP>
-
-          <Button
-            onClick={handleVerifyOtp}
-            disabled={verifying || otp.length !== 6}
-          >
-            {verifying ? "Verifying..." : "Verify OTP"}
-          </Button>
-
-          <div className="text-sm text-gray-600 text-center">
-            {timer > 0 ? (
-              `Resend OTP in ${timer}s`
-            ) : (
-              <button
-                onClick={handleResend}
-                disabled={resending}
-                className="text-blue-600 hover:underline"
-              >
-                Resend OTP
-              </button>
+  const renderStepIndicator = () => (
+    <div className="flex justify-center mb-6">
+      <div className="flex items-center space-x-2">
+        {[1, 2, 3].map((stepNumber) => (
+          <React.Fragment key={stepNumber}>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                stepNumber <= step
+                  ? "bg-primary text-white"
+                  : "bg-gray-200 text-gray-600"
+              }`}
+            >
+              {stepNumber < step ? "✓" : stepNumber}
+            </div>
+            {stepNumber < 3 && (
+              <div
+                className={`w-8 h-1 ${
+                  stepNumber < step ? "bg-primary" : "bg-gray-200"
+                }`}
+              />
             )}
-          </div>
-        </>
-      )}
-
-      {step === "password" && (
-        <>
-          <Input
-            type="password"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <Button
-            onClick={handleResetPassword}
-            disabled={resetting || newPassword.length < 6}
-          >
-            {resetting ? "Resetting..." : "Reset Password"}
-          </Button>
-        </>
-      )}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
   );
-}
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-secondary p-4">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-accent-dark">
+        {/* App Logo */}
+        <div className="flex justify-center mb-2">
+          <img src={logo} alt="App Logo" className="w-30 h-30" />
+        </div>
+
+        {/* Step Indicator */}
+        {step < 4 && renderStepIndicator()}
+
+        {/* Step 1: Email */}
+        {step === 1 && (
+          <>
+            <div className="text-center mb-6">
+              <Mail className="w-12 h-12 text-primary mx-auto mb-3" />
+              <h2 className="text-2xl font-bold text-primary mb-2">
+                Reset Password
+              </h2>
+              <p className="text-sm text-neutral-dark">
+                Enter your email address to receive a reset code
+              </p>
+            </div>
+
+            <Form {...emailForm}>
+              <form
+                onSubmit={emailForm.handleSubmit(handleForgotPassword)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="name@example.com"
+                          className="text-center"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full text-white" disabled={isEmailLoading}>
+                  {isEmailLoading ? "Sending..." : "Send Reset Code"}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-4 text-center">
+              <Link
+                to="/login"
+                className="text-sm text-primary hover:underline"
+              >
+                Back to Login
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* Step 2: OTP Verification */}
+        {step === 2 && (
+          <>
+            <div className="text-center mb-8">
+              <KeyRound className="w-16 h-16 text-primary mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-primary mb-3">
+                Enter Reset Code
+              </h2>
+              <p className="text-base text-neutral-dark leading-relaxed">
+                We've sent a 6-digit code to
+              </p>
+              <p className="text-base font-semibold text-primary mt-1">
+                {email}
+              </p>
+            </div>
+
+            <Form {...otpForm}>
+              <form
+                onSubmit={otpForm.handleSubmit(handleVerifyOtp)}
+                className="space-y-6"
+              >
+                <FormField
+                  control={otpForm.control}
+                  name="otp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="block text-center text-lg font-medium text-gray-700 mb-4">
+                        Reset Code
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex justify-center">
+                          <InputOTP
+                            maxLength={6}
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="gap-3"
+                          >
+                            <InputOTPGroup className="gap-3">
+                              {[...Array(6)].map((_, index) => (
+                                <InputOTPSlot
+                                  key={index}
+                                  index={index}
+                                  className="w-14 h-14 text-2xl font-bold border-2 border-primary/30 rounded-lg bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 hover:border-primary/50"
+                                />
+                              ))}
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-center mt-2" />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  className="w-full text-white py-3 text-lg font-semibold"
+                  disabled={isOtpLoading}
+                  size="lg"
+                >
+                  {isOtpLoading ? "Verifying..." : "Verify Code"}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-6 text-center">
+              {timeLeft > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-neutral-dark">Code expires in</p>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                    <span className="font-bold text-primary text-lg">
+                      {timeLeft}s
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="link"
+                  onClick={handleResendOtp}
+                  disabled={isResendLoading}
+                  className="text-base font-medium"
+                >
+                  {isResendLoading ? "Resending..." : "Resend Code"}
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Step 3: New Password */}
+        {step === 3 && (
+          <>
+            <div className="text-center mb-6">
+              <Lock className="w-12 h-12 text-primary mx-auto mb-3" />
+              <h2 className="text-2xl font-bold text-primary mb-2">
+                Create New Password
+              </h2>
+              <p className="text-sm text-neutral-dark">
+                Choose a strong password for your account
+              </p>
+            </div>
+
+            <Form {...passwordForm}>
+              <form
+                onSubmit={passwordForm.handleSubmit(handleResetPassword)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={passwordForm.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter new password"
+                          />
+                          <Button
+                            className="absolute inset-y-0 right-2 flex items-center text-sm text-neutral-dark cursor-pointer"
+                            variant="link"
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="text-xs text-neutral-dark">
+                  Password must contain at least 8 characters with uppercase,
+                  lowercase, and numbers
+                </div>
+                <Button className="w-full text-white" disabled={isResetLoading}>
+                  {isResetLoading ? "Updating..." : "Update Password"}
+                </Button>
+              </form>
+            </Form>
+          </>
+        )}
+
+        {/* Step 4: Success */}
+        {step === 4 && (
+          <div className="text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-primary mb-2">
+              Password Reset Successful!
+            </h2>
+            <p className="text-sm text-neutral-dark mb-6">
+              Your password has been successfully updated. You can now sign in
+              with your new password.
+            </p>
+            <div className="mb-4">
+              <p className="text-sm text-neutral-dark">
+                Redirecting to login in{" "}
+                <span className="font-bold text-primary text-lg">
+                  {redirectTimer}
+                </span>{" "}
+                seconds...
+              </p>
+            </div>
+            <Button
+              className="w-full text-white"
+              onClick={() => navigate("/login")}
+            >
+              Continue to Login Now
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ForgotPasswordPage;
