@@ -22,7 +22,7 @@ import Settings from "./pages/Settings";
 import FullCalendarPage from "./pages/FullCalendarPage";
 import SignupOTP from "./pages/SignupOTP";
 import GynecologistsPage from "./pages/Gynecologists";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import { generateToken, messaging } from "./notifications/firebase";
 import { onMessage } from "firebase/messaging";
 import { useUpdateUserMutation } from "@/app/userApi";
@@ -36,7 +36,6 @@ function App() {
   );
   const [userRole, setUserRole] = useState(null);
 
-  // Helper function to check if it's a new day
   const isNewDay = () => {
     const lastCheckDate = localStorage.getItem("lastCycleCheckDate");
     const today = new Date().toDateString();
@@ -61,110 +60,17 @@ function App() {
           const fcm_token = await generateToken();
 
           fcm_token && (await updateUser({ id: userId, fcm_token }).unwrap());
-
-          // Trigger daily cycle check only for regular users (not admins) and only once per day
           if (decoded.role === "USER" && isNewDay()) {
             try {
               const result = await userDailyCheck().unwrap();
               console.log("User daily check completed:", result);
-
-              // Show toast notifications sequentially with 5-second delays
-              if (result.notifications && result.notifications.length > 0) {
-                result.notifications.forEach((notification, index) => {
-                  setTimeout(() => {
-                    toast(
-                      <div className="flex items-center gap-3 p-3 w-full max-w-sm">
-                        <div className="relative flex-shrink-0">
-                          <img
-                            src="/luna-logo.png"
-                            alt="Luna"
-                            className="w-10 h-10 rounded-full shadow-md border-2 border-white"
-                          />
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">•</span>
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <div className="font-semibold text-gray-800 text-sm mb-1 truncate max-w-[200px]">
-                            {notification.title}
-                          </div>
-                          <div className="text-gray-600 text-xs leading-tight line-clamp-2 max-w-[200px]">
-                            {notification.body}
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <div className="w-2 h-2 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full animate-pulse"></div>
-                        </div>
-                      </div>,
-                      {
-                        duration: 4000, // Shorter duration to prevent overlap
-                        position: "top-center",
-                        style: {
-                          background:
-                            "linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%)",
-                          border: "1px solid #fecaca",
-                          borderRadius: "12px",
-                          boxShadow:
-                            "0 10px 25px -5px rgba(251, 113, 133, 0.25), 0 4px 6px -2px rgba(251, 113, 133, 0.05)",
-                          width: "320px",
-                          height: "80px",
-                          minHeight: "80px",
-                          maxHeight: "80px",
-                        },
-                        className: "border-l-4 border-l-rose-400",
-                      }
-                    );
-                  }, index * 4500); // 4.5-second delay between each notification
-                });
-              }
             } catch (error) {
               console.error("Failed to perform user daily check:", error);
             }
           }
 
           onMessage(messaging, (payload) => {
-            toast(
-              <div className="flex items-center gap-3 p-3 w-full max-w-sm">
-                <div className="relative flex-shrink-0">
-                  <img
-                    src="/luna-logo.png"
-                    alt="Luna"
-                    className="w-10 h-10 rounded-full shadow-md border-2 border-white"
-                  />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs">🔔</span>
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <div className="font-semibold text-gray-800 text-sm mb-1 truncate max-w-[200px]">
-                    {payload?.notification?.title || "Luna Notification"}
-                  </div>
-                  <div className="text-gray-600 text-xs leading-tight line-clamp-2 max-w-[200px]">
-                    {payload?.notification?.body || "New notification"}
-                  </div>
-                </div>
-                <div className="flex-shrink-0">
-                  <div className="w-2 h-2 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full animate-pulse"></div>
-                </div>
-              </div>,
-              {
-                duration: 4000,
-                position: "top-center",
-                style: {
-                  background:
-                    "linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%)",
-                  border: "1px solid #fecaca",
-                  borderRadius: "12px",
-                  boxShadow:
-                    "0 10px 25px -5px rgba(251, 113, 133, 0.25), 0 4px 6px -2px rgba(251, 113, 133, 0.05)",
-                  width: "320px",
-                  height: "80px",
-                  minHeight: "80px",
-                  maxHeight: "80px",
-                },
-                className: "border-l-4 border-l-rose-400",
-              }
-            );
+            console.log("Message received. ", payload);
           });
         } catch (err) {
           console.error("Token decode failed", err);
