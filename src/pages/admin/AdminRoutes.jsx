@@ -1,20 +1,13 @@
-import { useNavigate, Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import AppLayout from "../../Layouts/AppLayout";
-import { useEffect } from "react";
+import Login from "../Login";
 
 const AdminRoutes = () => {
   const token = Cookies.get("authToken");
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
-  }, [token, navigate]);
-
   if (!token) {
-    return null;
+    return <Login />;
   }
 
   try {
@@ -23,7 +16,7 @@ const AdminRoutes = () => {
 
     if (decodedToken.exp < currentTime) {
       Cookies.remove("authToken");
-      return <Navigate to="/login" />;
+      return <Login />;
     }
 
     if (decodedToken.role !== "ADMIN") {

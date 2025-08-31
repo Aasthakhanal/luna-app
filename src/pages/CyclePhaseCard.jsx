@@ -60,7 +60,7 @@ export const CyclePhaseCard = ({ currentPhase }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className="bg-sky-50 shadow-md min-h-[230px] transition-transform duration-200 hover:scale-[1.02]">
+    <Card className="bg-sky-50 shadow-md min-h-[250px] transition-transform duration-200 hover:scale-[1.02]">
       <CardHeader
         className="pb-2 cursor-pointer flex justify-between items-center"
         onClick={() => setIsOpen(!isOpen)}
